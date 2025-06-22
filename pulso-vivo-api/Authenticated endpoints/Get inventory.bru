@@ -1,0 +1,11 @@
+meta {
+  name: Get inventory
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8081/api/inventory/product
+  body: none
+  auth: inherit
+}

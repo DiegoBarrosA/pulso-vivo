@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  pulso-vivo-inventory-service:
+    build: ./pulso-vivo-inventory-service
+    image: pulso-vivo-inventory-service:latest
+    ports:
+      - "8080:8080"
+    container_name: pulso-vivo-inventory-service-container
+    restart: unless-stopped
+  pulso-vivo-ng:
+    build: ./pulso-vivo-ng
+    image: pulso-vivo-ng:latest
+    ports:
+      - "3000:80"
+    container_name: pulso-vivo-ng-container
+    restart: unless-stopped
+    depends_on:
+      - pulso-vivo-inventory-service
+  rabbitmq:
+    image: docker.io/rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # Standard AMQP port
+      - "15672:15672" # Management UI port
+    restart: unless-stopped
