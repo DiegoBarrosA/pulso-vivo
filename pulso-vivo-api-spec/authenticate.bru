@@ -1,0 +1,22 @@
+meta {
+  name: authenticate
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8081/auth/login
+  body: json
+  auth: none
+}
+
+params:query {
+  ~: 
+}
+
+body:json {
+  {
+      "username": "your-username",
+      "password": "your-password"
+  }
+}
