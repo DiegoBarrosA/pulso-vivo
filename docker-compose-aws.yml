@@ -1,0 +1,329 @@
+version: '3.8'
+
+services:
+  # API Gateway - Kong
+  kong-database:
+    image: postgres:13
+    container_name: kong-database
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+      POSTGRES_DB: kong
+    volumes:
+      - kong-db-data:/var/lib/postgresql/data
+    networks:
+      - pulso-vivo-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kong"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  kong-migrations:
+    image: kong/kong-gateway:3.4.0.0
+    command: kong migrations bootstrap
+    depends_on:
+      - kong-database
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DATABASE: kong
+    networks:
+      - pulso-vivo-network
+
+  kong:
+    image: kong/kong-gateway:3.4.0.0
+    container_name: kong-gateway
+    depends_on:
+      - kong-database
+      - kong-migrations
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DATABASE: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+      KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_PLUGINS: bundled,jwt
+    ports:
+      - "8000:8000"     # Kong Proxy (API Gateway)
+      - "8001:8001"     # Kong Admin API
+      - "8002:8002"     # Kong Admin GUI
+    networks:
+      - pulso-vivo-network
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  # Kong Configuration Service
+  kong-config:
+    image: curlimages/curl:latest
+    container_name: kong-config
+    depends_on:
+      - kong
+    volumes:
+      - ./kong-config:/scripts
+    command: >
+      sh -c "
+        echo 'Waiting for Kong to be ready...' &&
+        sleep 30 &&
+        /scripts/configure-kong.sh
+      "
+    networks:
+      - pulso-vivo-network
+
+  # Rate Limiting Service
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    networks:
+      - pulso-vivo-network
+
+  # Existing services from original docker-compose.yml
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper-1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+    ports:
+      - "2181:2181"
+    networks:
+      - pulso-vivo-network
+
+  zookeeper-2:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper-2
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2182
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+    ports:
+      - "2182:2182"
+    networks:
+      - pulso-vivo-network
+
+  zookeeper-3:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper-3
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2183
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+    ports:
+      - "2183:2183"
+    networks:
+      - pulso-vivo-network
+
+  kafka-1:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka-1
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    ports:
+      - "9092:9092"
+    networks:
+      - pulso-vivo-network
+
+  kafka-2:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka-2
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    ports:
+      - "9093:9093"
+    networks:
+      - pulso-vivo-network
+
+  kafka-3:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka-3
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    ports:
+      - "9094:9094"
+    networks:
+      - pulso-vivo-network
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka-init
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    command: >
+      bash -c "
+      echo 'Waiting for Kafka to be ready...' &&
+      kafka-topics --create --topic ventas --bootstrap-server kafka-1:9092 --replication-factor 3 --partitions 3 &&
+      kafka-topics --create --topic stock --bootstrap-server kafka-1:9092 --replication-factor 3 --partitions 3 &&
+      echo 'Topics created successfully'
+      "
+    networks:
+      - pulso-vivo-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    environment:
+      KAFKA_CLUSTERS_0_NAME: pulso-vivo-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092,kafka-2:9093,kafka-3:9094
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+    ports:
+      - "8095:8080"
+    networks:
+      - pulso-vivo-network
+
+  # Microservices
+  pulso-vivo-kafka-productor-ventas:
+    build:
+      context: ./pulso-vivo-kafka-productor-ventas
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-kafka-productor-ventas
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+      - oracle
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9093,kafka-3:9094
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle:1521:XE
+      SPRING_DATASOURCE_USERNAME: system
+      SPRING_DATASOURCE_PASSWORD: oracle
+    networks:
+      - pulso-vivo-network
+
+  pulso-vivo-inventory-service:
+    build:
+      context: ./pulso-vivo-inventory-service
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-inventory-service
+    depends_on:
+      - oracle
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle:1521:XE
+      SPRING_DATASOURCE_USERNAME: system
+      SPRING_DATASOURCE_PASSWORD: oracle
+    networks:
+      - pulso-vivo-network
+
+  pulso-vivo-kafka-consumidor-ventas-productor-stock:
+    build:
+      context: ./pulso-vivo-kafka-consumidor-ventas-productor-stock
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-kafka-consumidor-ventas-productor-stock
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+      - oracle
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9093,kafka-3:9094
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle:1521:XE
+      SPRING_DATASOURCE_USERNAME: system
+      SPRING_DATASOURCE_PASSWORD: oracle
+    networks:
+      - pulso-vivo-network
+
+  pulso-vivo-promotions-service:
+    build:
+      context: ./pulso-vivo-promotions-service
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-promotions-service
+    depends_on:
+      - oracle
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle:1521:XE
+      SPRING_DATASOURCE_USERNAME: system
+      SPRING_DATASOURCE_PASSWORD: oracle
+    networks:
+      - pulso-vivo-network
+
+  # Database
+  oracle:
+    image: container-registry.oracle.com/database/express:21.3.0-xe
+    container_name: oracle-xe
+    environment:
+      ORACLE_PWD: oracle
+      ORACLE_CHARACTERSET: AL32UTF8
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    networks:
+      - pulso-vivo-network
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - pulso-vivo-network
+
+volumes:
+  oracle-data:
+  kong-db-data:
+
+networks:
+  pulso-vivo-network:
+    driver: bridge

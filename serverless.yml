@@ -1,0 +1,172 @@
+# Serverless Framework Configuration for Pulso Vivo API Gateway
+# ==============================================================
+
+service: pulso-vivo-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: prod
+  
+  environment:
+    AZURE_TENANT_ID: "82c6cf20-e689-4aa9-bedf-7acaf7c4ead7"
+    AZURE_POLICY: "b2c_1_pulso_vivo_register_and_login"
+    AZURE_CLIENT_ID: "7549ac9c-9294-4bb3-98d6-752d12b13d81"
+    EC2_INSTANCE_IP: "10.0.1.100"
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    port: 3000
+
+functions:
+  # Lambda Authorizer para Azure AD B2C JWT
+  azureB2CAuthorizer:
+    handler: src/authorizer.handler
+    environment:
+      AZURE_ISSUER: "https://pulsovivo.b2clogin.com/tfp/82c6cf20-e689-4aa9-bedf-7acaf7c4ead7/b2c_1_pulso_vivo_register_and_login/v2.0/"
+      AZURE_AUDIENCE: "7549ac9c-9294-4bb3-98d6-752d12b13d81"
+      AZURE_JWKS_URI: "https://pulsovivo.b2clogin.com/tfp/82c6cf20-e689-4aa9-bedf-7acaf7c4ead7/b2c_1_pulso_vivo_register_and_login/discovery/v2.0/keys"
+
+  # Proxy functions para cada microservicio
+  salesProxy:
+    handler: src/proxy.salesHandler
+    events:
+      - http:
+          path: /sales
+          method: get
+          authorizer: azureB2CAuthorizer
+          cors: true
+      - http:
+          path: /sales
+          method: post
+          authorizer: azureB2CAuthorizer
+          cors: true
+      - http:
+          path: /sales/{proxy+}
+          method: any
+          authorizer: azureB2CAuthorizer
+          cors: true
+
+  inventoryProxy:
+    handler: src/proxy.inventoryHandler
+    events:
+      - http:
+          path: /inventory
+          method: get
+          authorizer: azureB2CAuthorizer
+          cors: true
+      - http:
+          path: /inventory
+          method: post
+          authorizer: azureB2CAuthorizer
+          cors: true
+      - http:
+          path: /inventory/{proxy+}
+          method: any
+          authorizer: azureB2CAuthorizer
+          cors: true
+
+  promotionsProxy:
+    handler: src/proxy.promotionsHandler
+    events:
+      - http:
+          path: /promotions
+          method: get
+          authorizer: azureB2CAuthorizer
+          cors: true
+      - http:
+          path: /promotions
+          method: post
+          authorizer: azureB2CAuthorizer
+          cors: true
+      - http:
+          path: /promotions/{proxy+}
+          method: any
+          authorizer: azureB2CAuthorizer
+          cors: true
+
+  stockProxy:
+    handler: src/proxy.stockHandler
+    events:
+      - http:
+          path: /stock
+          method: get
+          authorizer: azureB2CAuthorizer
+          cors: true
+      - http:
+          path: /stock
+          method: post
+          authorizer: azureB2CAuthorizer
+          cors: true
+      - http:
+          path: /stock/{proxy+}
+          method: any
+          authorizer: azureB2CAuthorizer
+          cors: true
+
+resources:
+  Resources:
+    # WAF Web ACL
+    WebACL:
+      Type: AWS::WAFv2::WebACL
+      Properties:
+        Name: PulsoVivoAPIProtection
+        Scope: REGIONAL
+        DefaultAction:
+          Allow: {}
+        Rules:
+          - Name: RateLimitRule
+            Priority: 1
+            Statement:
+              RateBasedStatement:
+                Limit: 1000
+                AggregateKeyType: IP
+            Action:
+              Block: {}
+            VisibilityConfig:
+              SampledRequestsEnabled: true
+              CloudWatchMetricsEnabled: true
+              MetricName: RateLimitRule
+          - Name: AWSManagedRulesCommonRuleSet
+            Priority: 2
+            OverrideAction:
+              None: {}
+            Statement:
+              ManagedRuleGroupStatement:
+                VendorName: AWS
+                Name: AWSManagedRulesCommonRuleSet
+            VisibilityConfig:
+              SampledRequestsEnabled: true
+              CloudWatchMetricsEnabled: true
+              MetricName: CommonRuleSetMetric
+
+    # API Gateway Custom Domain (opcional)
+    # ApiGatewayDomain:
+    #   Type: AWS::ApiGateway::DomainName
+    #   Properties:
+    #     DomainName: api.pulsovivo.com
+    #     CertificateArn: arn:aws:acm:us-east-1:123456789012:certificate/12345678
+
+  Outputs:
+    ApiGatewayRestApiId:
+      Value:
+        Ref: ApiGatewayRestApi
+    ApiGatewayUrl:
+      Value:
+        Fn::Join:
+          - ""
+          - - "https://"
+            - Ref: ApiGatewayRestApi
+            - ".execute-api."
+            - ${self:provider.region}
+            - ".amazonaws.com/"
+            - ${self:provider.stage}
+    WebACLArn:
+      Value:
+        Fn::GetAtt:
+          - WebACL
+          - Arn

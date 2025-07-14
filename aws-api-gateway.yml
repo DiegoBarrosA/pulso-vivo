@@ -1,0 +1,406 @@
+# AWS API Gateway Configuration for Pulso Vivo
+# =============================================
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'API Gateway para Pulso Vivo con autenticación Azure AD B2C JWT'
+
+Parameters:
+  EC2InstanceIP:
+    Type: String
+    Description: IP privada de la instancia EC2 donde corren los microservicios
+    Default: "10.0.1.100"
+  
+  VPCLinkId:
+    Type: String
+    Description: VPC Link ID para conectar con la VPC privada
+    
+  AzureADB2CTenantId:
+    Type: String
+    Description: Azure AD B2C Tenant ID
+    Default: "82c6cf20-e689-4aa9-bedf-7acaf7c4ead7"
+    
+  AzureADB2CPolicy:
+    Type: String
+    Description: Azure AD B2C Policy Name
+    Default: "b2c_1_pulso_vivo_register_and_login"
+    
+  AzureADB2CAudience:
+    Type: String
+    Description: Azure AD B2C Application Client ID
+    Default: "7549ac9c-9294-4bb3-98d6-752d12b13d81"
+
+Resources:
+  # JWT Authorizer para Azure AD B2C
+  AzureADB2CAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: AzureADB2CJWTAuthorizer
+      Type: JWT
+      RestApiId: !Ref PulsoVivoAPI
+      IdentitySource: "$request.header.Authorization"
+      JwtConfiguration:
+        Issuer: !Sub "https://pulsovivo.b2clogin.com/tfp/${AzureADB2CTenantId}/${AzureADB2CPolicy}/v2.0/"
+        Audience:
+          - !Ref AzureADB2CAudience
+
+  # API Gateway principal
+  PulsoVivoAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: pulso-vivo-api
+      Description: API Gateway para sistema Pulso Vivo con microservicios Kafka
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Policy:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: 'execute-api:Invoke'
+            Resource: '*'
+
+  # Deployment
+  APIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - SalesGetMethod
+      - SalesPostMethod
+      - InventoryGetMethod
+      - InventoryPostMethod
+      - PromotionsGetMethod
+      - PromotionsPostMethod
+      - StockGetMethod
+      - StockPostMethod
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      StageName: prod
+      StageDescription:
+        MethodSettings:
+          - ResourcePath: "/*"
+            HttpMethod: "*"
+            ThrottlingBurstLimit: 200
+            ThrottlingRateLimit: 100
+            LoggingLevel: INFO
+            DataTraceEnabled: true
+
+  # Stage para producción
+  ProdStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      DeploymentId: !Ref APIDeployment
+      StageName: prod
+      Description: Production stage
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          ThrottlingBurstLimit: 200
+          ThrottlingRateLimit: 100
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+
+  # ========================================
+  # RECURSOS Y MÉTODOS PARA SALES SERVICE
+  # ========================================
+  
+  SalesResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ParentId: !GetAtt PulsoVivoAPI.RootResourceId
+      PathPart: sales
+
+  SalesGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ResourceId: !Ref SalesResource
+      HttpMethod: GET
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AzureADB2CAuthorizer
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: GET
+        Uri: !Sub "http://${EC2InstanceIP}:8081/sales"
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref VPCLinkId
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
+
+  SalesPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ResourceId: !Ref SalesResource
+      HttpMethod: POST
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AzureADB2CAuthorizer
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "http://${EC2InstanceIP}:8081/sales"
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref VPCLinkId
+
+  SalesOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ResourceId: !Ref SalesResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
+
+  # ========================================
+  # RECURSOS Y MÉTODOS PARA INVENTORY SERVICE
+  # ========================================
+  
+  InventoryResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ParentId: !GetAtt PulsoVivoAPI.RootResourceId
+      PathPart: inventory
+
+  InventoryGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ResourceId: !Ref InventoryResource
+      HttpMethod: GET
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AzureADB2CAuthorizer
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: GET
+        Uri: !Sub "http://${EC2InstanceIP}:8083/inventory"
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref VPCLinkId
+
+  InventoryPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ResourceId: !Ref InventoryResource
+      HttpMethod: POST
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AzureADB2CAuthorizer
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "http://${EC2InstanceIP}:8083/inventory"
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref VPCLinkId
+
+  # ========================================
+  # RECURSOS Y MÉTODOS PARA PROMOTIONS SERVICE
+  # ========================================
+  
+  PromotionsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ParentId: !GetAtt PulsoVivoAPI.RootResourceId
+      PathPart: promotions
+
+  PromotionsGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ResourceId: !Ref PromotionsResource
+      HttpMethod: GET
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AzureADB2CAuthorizer
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: GET
+        Uri: !Sub "http://${EC2InstanceIP}:8085/promotions"
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref VPCLinkId
+
+  PromotionsPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ResourceId: !Ref PromotionsResource
+      HttpMethod: POST
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AzureADB2CAuthorizer
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "http://${EC2InstanceIP}:8085/promotions"
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref VPCLinkId
+
+  # ========================================
+  # RECURSOS Y MÉTODOS PARA STOCK SERVICE
+  # ========================================
+  
+  StockResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ParentId: !GetAtt PulsoVivoAPI.RootResourceId
+      PathPart: stock
+
+  StockGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ResourceId: !Ref StockResource
+      HttpMethod: GET
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AzureADB2CAuthorizer
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: GET
+        Uri: !Sub "http://${EC2InstanceIP}:8084/stock"
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref VPCLinkId
+
+  StockPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref PulsoVivoAPI
+      ResourceId: !Ref StockResource
+      HttpMethod: POST
+      AuthorizationType: JWT
+      AuthorizerId: !Ref AzureADB2CAuthorizer
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "http://${EC2InstanceIP}:8084/stock"
+        ConnectionType: VPC_LINK
+        ConnectionId: !Ref VPCLinkId
+
+  # ========================================
+  # WAF WEB ACL PARA PROTECCIÓN
+  # ========================================
+  
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: PulsoVivoAPIProtection
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      Rules:
+        - Name: RateLimitRule
+          Priority: 1
+          Statement:
+            RateBasedStatement:
+              Limit: 1000
+              AggregateKeyType: IP
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitRule
+        - Name: AWSManagedRulesCommonRuleSet
+          Priority: 2
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: CommonRuleSetMetric
+
+  # Asociar WAF con API Gateway
+  WebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${PulsoVivoAPI}/stages/prod"
+      WebACLArn: !GetAtt WebACL.Arn
+
+  # ========================================
+  # CLOUDWATCH LOGS
+  # ========================================
+  
+  APIGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/apigateway/${PulsoVivoAPI}"
+      RetentionInDays: 30
+
+  APIGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt CloudWatchRole.Arn
+
+  CloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudWatchLogsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Resource: "*"
+
+Outputs:
+  APIGatewayURL:
+    Description: URL del API Gateway
+    Value: !Sub "https://${PulsoVivoAPI}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Export:
+      Name: !Sub "${AWS::StackName}-APIGatewayURL"
+      
+  APIGatewayId:
+    Description: ID del API Gateway
+    Value: !Ref PulsoVivoAPI
+    Export:
+      Name: !Sub "${AWS::StackName}-APIGatewayId"
+      
+  WebACLArn:
+    Description: ARN del Web ACL de WAF
+    Value: !GetAtt WebACL.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-WebACLArn"
