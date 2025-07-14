@@ -1,0 +1,24 @@
+meta {
+  name: Create product
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host_inventory}}/api/inventory/products
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "name": "Laptop Dell XPS 13",
+      "description": "High-performance ultrabook with 13-inch display up",
+      "quantity": 20,
+      "category": "Electronics",
+      "active": true,
+      "price": 100.0,
+      "priceChangeAmount": 0,
+      "priceChangePercentage": 0
+    }
+}

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "pulso-vivo-api-spec",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

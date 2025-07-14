@@ -1,0 +1,460 @@
+<div class="administracion-container">
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="container-fluid">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h1 class="titulo-admin">
+            <i class="bi bi-gear-fill"></i>
+            Administración de Stock
+          </h1>
+          <p class="subtitulo-admin">Panel de control para gestión de inventario médico</p>
+        </div>
+        <div class="col-md-6 text-end">
+          <div class="user-info">
+            <span class="me-3">Bienvenido, Administrador</span>
+            <a routerLink="/" class="btn btn-outline-primary me-2">
+              <i class="bi bi-shop"></i> Ir a Tienda
+            </a>
+            <button class="btn btn-outline-danger" (click)="cerrarSesion()">
+              <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="admin-nav">
+    <div class="container-fluid">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <button 
+            class="nav-link" 
+            [class.active]="vistaActual === 'inventario'"
+            (click)="cambiarVista('inventario')">
+            <i class="bi bi-box-seam"></i> Inventario
+          </button>
+        </li>
+        <li class="nav-item">
+          <button 
+            class="nav-link" 
+            [class.active]="vistaActual === 'movimientos'"
+            (click)="cambiarVista('movimientos')">
+            <i class="bi bi-arrow-left-right"></i> Movimientos
+          </button>
+        </li>
+        <li class="nav-item">
+          <button 
+            class="nav-link" 
+            [class.active]="vistaActual === 'reportes'"
+            (click)="cambiarVista('reportes')">
+            <i class="bi bi-graph-up"></i> Reportes
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Dashboard Statistics -->
+  <section class="estadisticas-section">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-3 col-md-6 mb-3">
+          <div class="card stat-card stat-primary">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                  <i class="bi bi-box"></i>
+                </div>
+                <div class="stat-content">
+                  <h3>{{ estadisticas.totalProductos }}</h3>
+                  <p>Total Productos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+          <div class="card stat-card stat-success">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                  <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                  <h3>{{ estadisticas.productosActivos }}</h3>
+                  <p>Productos Activos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+          <div class="card stat-card stat-warning">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                  <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                  <h3>{{ estadisticas.productosStockBajo }}</h3>
+                  <p>Stock Bajo</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+          <div class="card stat-card stat-info">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                  <i class="bi bi-currency-euro"></i>
+                </div>
+                <div class="stat-content">
+                  <h3>{{ estadisticas.valorInventario | currency:'EUR':'symbol':'1.0-0':'es' }}</h3>
+                  <p>Valor Inventario</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <div class="container-fluid">
+      
+      <!-- Vista Inventario -->
+      <div *ngIf="vistaActual === 'inventario'" class="inventario-section">
+        <!-- Controles y Filtros -->
+        <div class="controles-section mb-4">
+          <div class="row">
+            <div class="col-lg-3 col-md-6 mb-3">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  placeholder="Buscar productos..."
+                  [(ngModel)]="terminoBusqueda"
+                  (input)="buscarProductos()">
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-3">
+              <select 
+                class="form-select" 
+                [(ngModel)]="categoriaFiltro"
+                (change)="filtrarPorCategoria()">
+                <option value="">Todas las categorías</option>
+                <option *ngFor="let categoria of categorias" [value]="categoria">
+                  {{ categoria }}
+                </option>
+              </select>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-3">
+              <select 
+                class="form-select" 
+                [(ngModel)]="estadoFiltro"
+                (change)="filtrarPorEstado()">
+                <option value="">Todos los estados</option>
+                <option value="activo">Activos</option>
+                <option value="inactivo">Inactivos</option>
+                <option value="stock_bajo">Stock Bajo</option>
+                <option value="sin_stock">Sin Stock</option>
+              </select>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-3">
+              <button class="btn btn-outline-secondary w-100" (click)="limpiarFiltros()">
+                <i class="bi bi-arrow-clockwise"></i> Limpiar
+              </button>
+            </div>
+            <div class="col-lg-3 col-md-12 mb-3">
+              <div class="d-flex gap-2">
+                <button class="btn btn-success flex-grow-1" (click)="abrirModalCrear()">
+                  <i class="bi bi-plus-circle"></i> Nuevo Producto
+                </button>
+                <button class="btn btn-info" (click)="exportarInventario()">
+                  <i class="bi bi-download"></i> Exportar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de Inventario -->
+        <div class="tabla-inventario">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th>ID</th>
+                  <th>Producto</th>
+                  <th>Categoría</th>
+                  <th>Stock Actual</th>
+                  <th>Stock Mínimo</th>
+                  <th>Precio</th>
+                  <th>Proveedor</th>
+                  <th>Estado</th>
+                  <th>Última Actualización</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let producto of productosFiltrados" 
+                    [class.table-warning]="getEstadoStock(producto) === 'bajo'"
+                    [class.table-danger]="getEstadoStock(producto) === 'agotado'">
+                  <td>{{ producto.id }}</td>
+                  <td>
+                    <div class="producto-info">
+                      <strong>{{ producto.name || producto.nombre }}</strong>
+                      <small class="d-block text-muted">{{ producto.description || producto.descripcion }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-secondary">{{ producto.category }}</span>
+                  </td>
+                  <td>
+                    <span [class]="getClaseEstado(getEstadoStock(producto))">
+                      {{ producto.quantity || producto.cantidadStock }}
+                    </span>
+                  </td>
+                  <td>{{ producto.stockMinimo || 5 }}</td>
+                  <td>{{ (producto.precio || 0) | currency:'EUR':'symbol':'1.2-2':'es' }}</td>
+                  <td>{{ producto.proveedor || 'N/A' }}</td>
+                  <td>
+                    <span class="badge" [class.bg-success]="producto.active || producto.activo" [class.bg-danger]="!(producto.active || producto.activo)">
+                      {{ (producto.active || producto.activo) ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td>{{ producto.fechaActualizacion ? formatearFecha(producto.fechaActualizacion) : 'N/A' }}</td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <button 
+                        class="btn btn-outline-primary" 
+                        (click)="abrirModalEditar(producto)"
+                        title="Editar">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button 
+                        class="btn btn-outline-info" 
+                        (click)="abrirModalMovimiento(producto)"
+                        title="Movimiento de stock">
+                        <i class="bi bi-arrow-left-right"></i>
+                      </button>
+                      <button 
+                        class="btn btn-outline-warning" 
+                        (click)="toggleEstadoProducto(producto)"
+                        [title]="(producto.active || producto.activo) ? 'Desactivar' : 'Activar'">
+                        <i [class]="(producto.active || producto.activo) ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                      </button>
+                      <button 
+                        class="btn btn-outline-danger" 
+                        (click)="eliminarProducto(producto)"
+                        title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Mensaje cuando no hay productos -->
+          <div *ngIf="productosFiltrados.length === 0" class="text-center py-4">
+            <i class="bi bi-inbox display-4 text-muted"></i>
+            <h4 class="mt-3">No se encontraron productos</h4>
+            <p class="text-muted">Ajusta los filtros o agrega nuevos productos</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista Movimientos -->
+      <div *ngIf="vistaActual === 'movimientos'" class="movimientos-section">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3>Historial de Movimientos</h3>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead class="table-dark">
+              <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Motivo</th>
+                <th>Usuario</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let movimiento of movimientos">
+                <td>{{ formatearFecha(movimiento.fecha) }}</td>
+                <td>{{ movimiento.productoNombre }}</td>
+                <td>
+                  <span class="badge" 
+                        [class.bg-success]="movimiento.tipo === 'entrada'"
+                        [class.bg-danger]="movimiento.tipo === 'salida'"
+                        [class.bg-info]="movimiento.tipo === 'ajuste'">
+                    <i class="bi" 
+                       [class.bi-arrow-down]="movimiento.tipo === 'entrada'"
+                       [class.bi-arrow-up]="movimiento.tipo === 'salida'"
+                       [class.bi-gear]="movimiento.tipo === 'ajuste'"></i>
+                    {{ movimiento.tipo | titlecase }}
+                  </span>
+                </td>
+                <td>{{ movimiento.cantidad }}</td>
+                <td>{{ movimiento.motivo }}</td>
+                <td>{{ movimiento.usuario }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Vista Reportes -->
+      <div *ngIf="vistaActual === 'reportes'" class="reportes-section">
+        <div class="text-center py-5">
+          <i class="bi bi-graph-up display-1 text-muted"></i>
+          <h3 class="mt-3">Reportes y Analytics</h3>
+          <p class="text-muted">Esta sección estará disponible próximamente</p>
+          <p class="text-muted">Incluirá gráficos de ventas, rotación de inventario, y análisis de tendencias</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal para Crear/Editar Producto -->
+<div class="modal fade" [class.show]="mostrarModal && (modoModal === 'crear' || modoModal === 'editar')" 
+     [style.display]="mostrarModal && (modoModal === 'crear' || modoModal === 'editar') ? 'block' : 'none'"
+     *ngIf="mostrarModal && (modoModal === 'crear' || modoModal === 'editar')">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-box"></i>
+          {{ modoModal === 'crear' ? 'Nuevo Producto' : 'Editar Producto' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nombre del Producto *</label>
+              <input type="text" class="form-control" [(ngModel)]="formularioProducto.name" name="name" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Categoría *</label>
+              <input type="text" class="form-control" [(ngModel)]="formularioProducto.category" name="category" required>
+            </div>
+            <div class="col-12 mb-3">
+              <label class="form-label">Descripción</label>
+              <textarea class="form-control" rows="3" [(ngModel)]="formularioProducto.description" name="description"></textarea>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Precio (€) *</label>
+              <input type="number" step="0.01" class="form-control" [(ngModel)]="formularioProducto.precio" name="precio" required>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Stock Actual *</label>
+              <input type="number" class="form-control" [(ngModel)]="formularioProducto.quantity" name="quantity" required>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Stock Mínimo *</label>
+              <input type="number" class="form-control" value="5" readonly disabled>
+              <small class="form-text text-muted">Valor fijo en el sistema de inventario</small>
+            </div>
+            <div class="col-md-8 mb-3">
+              <label class="form-label">Proveedor</label>
+              <input type="text" class="form-control" value="N/A" readonly disabled>
+              <small class="form-text text-muted">Campo no disponible en el sistema de inventario</small>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formularioProducto.active" name="active" id="active">
+                <label class="form-check-label" for="active">
+                  Producto Activo
+                </label>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="guardarProducto()">
+          <i class="bi bi-save"></i>
+          {{ modoModal === 'crear' ? 'Crear Producto' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Movimiento de Stock -->
+<div class="modal fade" [class.show]="mostrarModal && modoModal === 'movimiento'" 
+     [style.display]="mostrarModal && modoModal === 'movimiento' ? 'block' : 'none'"
+     *ngIf="mostrarModal && modoModal === 'movimiento'">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-arrow-left-right"></i>
+          Movimiento de Stock - {{ productoSeleccionado?.name || productoSeleccionado?.nombre }}
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <strong>Stock Actual:</strong> {{ productoSeleccionado?.quantity || productoSeleccionado?.cantidadStock }} unidades
+        </div>
+        
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Tipo de Movimiento *</label>
+            <select class="form-select" [(ngModel)]="formularioMovimiento.tipo" name="tipo" required>
+              <option value="entrada">Entrada (Agregar Stock)</option>
+              <option value="salida">Salida (Reducir Stock)</option>
+              <option value="ajuste">Ajuste (Establecer Stock)</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Cantidad *</label>
+            <input type="number" class="form-control" [(ngModel)]="formularioMovimiento.cantidad" name="cantidad" required min="0">
+            <div class="form-text">
+              <span *ngIf="formularioMovimiento.tipo === 'entrada'">Se agregará esta cantidad al stock actual</span>
+              <span *ngIf="formularioMovimiento.tipo === 'salida'">Se restará esta cantidad del stock actual</span>
+              <span *ngIf="formularioMovimiento.tipo === 'ajuste'">El stock se establecerá a esta cantidad</span>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Motivo *</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="formularioMovimiento.motivo" name="motivo" required 
+                      placeholder="Describe el motivo del movimiento..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="registrarMovimiento()">
+          <i class="bi bi-check-circle"></i>
+          Registrar Movimiento
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop fade show" *ngIf="mostrarModal" (click)="cerrarModal()"></div>

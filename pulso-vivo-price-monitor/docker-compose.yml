@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  pulso-vivo-inventory-service:
+    build: ../rabbitmqavanzado
+    image: rabbitmqavanzado:latest
+    ports:
+      - "8080:8081"
+    container_name: rabbitmqavanzado-container
+    restart: unless-stopped
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+    depends_on:
+      - rabbitmq
+    networks:
+      - app-network
+  rabbitmq:
+    image: docker.io/rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # Standard AMQP port
+      - "15672:15672" # Management UI port
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

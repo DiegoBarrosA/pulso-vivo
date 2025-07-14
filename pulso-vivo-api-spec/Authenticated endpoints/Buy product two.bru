@@ -1,0 +1,22 @@
+meta {
+  name: Buy product two
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{host_producer}}/api/ventas
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+      "codigoProducto": "1",
+      "cantidad": 2,
+      "precioUnitario": 1299.99,
+      "clienteId": "VALID_PRODUCT_TEST",
+      "canalVenta": "ONLINE",
+      "ubicacion": "SANTIAGO"
+    }
+}

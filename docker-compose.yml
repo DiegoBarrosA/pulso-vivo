@@ -1,0 +1,494 @@
+version: '3.8'
+
+services:
+  # RabbitMQ service
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: pulso-vivo-rabbitmq
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - kafka-net
+
+  # Zookeeper Ensemble
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: zookeeper-1
+    container_name: zookeeper-1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 20
+      ZOOKEEPER_SYNC_LIMIT: 10
+      ZOOKEEPER_SERVERS: "zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888"
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: "srvr,mntr,conf,ruok,stat"
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: 1
+      ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: 3
+    volumes:
+      - zk-data-1:/var/lib/zookeeper/data
+      - zk-log-1:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'stat' | nc localhost 2181 | grep Mode"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - kafka-net
+
+  zookeeper-2:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: zookeeper-2
+    container_name: zookeeper-2
+    ports:
+      - "2182:2181"
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 20
+      ZOOKEEPER_SYNC_LIMIT: 10
+      ZOOKEEPER_SERVERS: "zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888"
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: "srvr,mntr,conf,ruok,stat"
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: 1
+      ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: 3
+    volumes:
+      - zk-data-2:/var/lib/zookeeper/data
+      - zk-log-2:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'stat' | nc localhost 2181 | grep Mode"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - kafka-net
+
+  zookeeper-3:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: zookeeper-3
+    container_name: zookeeper-3
+    ports:
+      - "2183:2181"
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 20
+      ZOOKEEPER_SYNC_LIMIT: 10
+      ZOOKEEPER_SERVERS: "zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888"
+      ZOOKEEPER_4LW_COMMANDS_WHITELIST: "srvr,mntr,conf,ruok,stat"
+    volumes:
+      - zk-data-3:/var/lib/zookeeper/data
+      - zk-log-3:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'stat' | nc localhost 2181 | grep Mode"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - kafka-net
+
+  # Kafka Brokers
+  kafka-1:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: kafka-1
+    container_name: kafka-1
+    ports:
+      - "9092:9092"
+      - "9991:9991"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka-1:29092,EXTERNAL://localhost:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_LISTENERS: "INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_IN_SYNC_REPLICAS: 2
+      KAFKA_JMX_PORT: 9991
+      KAFKA_JMX_HOSTNAME: kafka-1
+    volumes:
+      - kafka-data-1:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    depends_on:
+      zookeeper-1:
+        condition: service_healthy
+      zookeeper-2:
+        condition: service_healthy
+      zookeeper-3:
+        condition: service_healthy
+    networks:
+      - kafka-net
+
+  kafka-2:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: kafka-2
+    container_name: kafka-2
+    ports:
+      - "9093:9093"
+      - "9992:9992"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka-2:29093,EXTERNAL://localhost:9093"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_LISTENERS: "INTERNAL://0.0.0.0:29093,EXTERNAL://0.0.0.0:9093"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_IN_SYNC_REPLICAS: 2
+      KAFKA_JMX_PORT: 9992
+      KAFKA_JMX_HOSTNAME: kafka-2
+    volumes:
+      - kafka-data-2:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9093", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    depends_on:
+      zookeeper-1:
+        condition: service_healthy
+      zookeeper-2:
+        condition: service_healthy
+      zookeeper-3:
+        condition: service_healthy
+    networks:
+      - kafka-net
+
+  kafka-3:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: kafka-3
+    container_name: kafka-3
+    ports:
+      - "9094:9094"
+      - "9993:9993"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka-3:29094,EXTERNAL://localhost:9094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_LISTENERS: "INTERNAL://0.0.0.0:29094,EXTERNAL://0.0.0.0:9094"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_IN_SYNC_REPLICAS: 2
+      KAFKA_JMX_PORT: 9993
+      KAFKA_JMX_HOSTNAME: kafka-3
+    volumes:
+      - kafka-data-3:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9094", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    depends_on:
+      zookeeper-1:
+        condition: service_healthy
+      zookeeper-2:
+        condition: service_healthy
+      zookeeper-3:
+        condition: service_healthy
+    networks:
+      - kafka-net
+
+# Kafka Topic Initialization
+  kafka-init:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka-init
+    depends_on:
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+    command: |
+      bash -c "
+        # Wait for Kafka to be ready
+        sleep 30
+
+        # Create ventas topic - using INTERNAL ports
+        kafka-topics --create --topic ventas --bootstrap-server kafka-1:29092,kafka-2:29093,kafka-3:29094 --partitions 3 --replication-factor 3 --if-not-exists
+
+        # Create stock topic - using INTERNAL ports
+        kafka-topics --create --topic stock --bootstrap-server kafka-1:29092,kafka-2:29093,kafka-3:29094 --partitions 3 --replication-factor 3 --if-not-exists
+
+        # List topics to verify
+        kafka-topics --list --bootstrap-server kafka-1:29092,kafka-2:29093,kafka-3:29094
+
+        echo 'Topics created successfully!'
+      "
+    networks:
+      - kafka-net
+  # Kafka UI
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8095:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: pulso-vivo-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:29092,kafka-2:29093,kafka-3:29094
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_ORG_APACHE_KAFKA: WARN
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    networks:
+      - kafka-net
+
+  # Spring Boot Producer Service
+  pulso-vivo-producer:
+    build:
+      context: ./pulso-vivo-kafka-productor-ventas
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-producer
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:29092,kafka-2:29093,kafka-3:29094"
+    volumes:
+      - ./pulso-vivo-kafka-productor-ventas/src/main/resources/wallet:/app/resources/wallet
+      - m2-cache:/root/.m2
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    networks:
+      - kafka-net
+
+  # Spring Boot Consumer Service (RabbitMQ)
+  pulso-vivo-consumer:
+    build:
+      context: ./pulso-vivo-sales-consumer
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-consumer
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SPRING_RABBITMQ_VIRTUAL_HOST=/
+      - SERVER_PORT=8082
+      - LOGGING_LEVEL_ROOT=INFO
+    volumes:
+      - ./pulso-vivo-sales-consumer/src/main/resources/wallet:/app/resources/wallet
+      - m2-cache:/root/.m2
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - kafka-net
+
+  # Kafka Consumer-Producer Service
+  pulso-vivo-kafka-consumidor-ventas-productor-stock:
+    build:
+      context: ./pulso-vivo-kafka-consumidor-ventas-productor-stock
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-kafka-consumidor-ventas-productor-stock
+    ports:
+      - "8084:8083"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:29092,kafka-2:29093,kafka-3:29094"
+    volumes:
+      - ./pulso-vivo-kafka-consumidor-ventas-productor-stock/src/main/resources/wallet:/app/resources/wallet
+      - m2-cache:/root/.m2
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    networks:
+      - kafka-net
+
+  # Inventory Service
+  pulso-vivo-inventory:
+    build:
+      context: ./pulso-vivo-inventory-service
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-inventory
+    ports:
+      - "8083:8081"
+    environment:
+      - SERVER_PORT=8081
+      - LOGGING_LEVEL_ONE_EXPRESSDEV=DEBUG
+      - LOGGING_LEVEL_ROOT=INFO
+    volumes:
+      - ./pulso-vivo-inventory-service/src/main/resources/wallet:/app/resources/wallet
+      - m2-cache:/root/.m2
+    depends_on:
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+    networks:
+      - kafka-net
+
+  # Promotions Service
+  pulso-vivo-promotions:
+    build:
+      context: ./pulso-vivo-promotions-service
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-promotions
+    ports:
+      - "8085:8080"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-1:29092,kafka-2:29093,kafka-3:29094"
+      KAFKA_TOPIC_VENTAS: "ventas"
+      KAFKA_TOPIC_STOCK: "stock"
+    volumes:
+      - ./pulso-vivo-promotions-service/src/main/resources/wallet:/app/resources/wallet
+      - m2-cache:/root/.m2
+    depends_on:
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    networks:
+      - kafka-net
+
+  # RabbitMQ Price Monitor Service
+  pulso-vivo-price-monitor:
+    build:
+      context: ./pulso-vivo-price-monitor
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-price-monitor
+    ports:
+      - "8090:8090"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SPRING_RABBITMQ_VIRTUAL_HOST=/
+      - SERVER_PORT=8090
+      - LOGGING_LEVEL_CL_DUOC=DEBUG
+      - LOGGING_LEVEL_ROOT=INFO
+      - INVENTORY_SERVICE_URL=http://pulso-vivo-inventory:8081
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    volumes:
+      - m2-cache:/root/.m2
+
+  # RabbitMQ Price Consumer Service
+  pulso-vivo-price-consumer:
+    build:
+      context: ./pulso-vivo-price-consumer
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-price-consumer
+    ports:
+      - "8091:8082"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SPRING_RABBITMQ_VIRTUAL_HOST=/
+      - SERVER_PORT=8082
+      - LOGGING_LEVEL_CL_DUOC=DEBUG
+      - LOGGING_LEVEL_ROOT=INFO
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      pulso-vivo-price-monitor:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    volumes:
+      - ./pulso-vivo-price-consumer/data:/data
+      - m2-cache:/root/.m2
+
+  # RabbitMQ Sales Monitor Service
+  pulso-vivo-sales-monitor:
+    build:
+      context: ./pulso-vivo-sales-monitor
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-sales-monitor
+    ports:
+      - "8092:8081"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SPRING_RABBITMQ_VIRTUAL_HOST=/
+      - SERVER_PORT=8081
+      - LOGGING_LEVEL_CL_DUOC=DEBUG
+      - LOGGING_LEVEL_ROOT=INFO
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - kafka-net
+    volumes:
+      - m2-cache:/root/.m2
+
+volumes:
+  # Zookeeper volumes
+  zk-data-1:
+  zk-log-1:
+  zk-data-2:
+  zk-log-2:
+  zk-data-3:
+  zk-log-3:
+  # Kafka volumes
+  kafka-data-1:
+  kafka-data-2:
+  kafka-data-3:
+  # RabbitMQ volume
+  rabbitmq_data:
+    name: pulso-vivo-rabbitmq-data
+  # Maven cache volume
+  m2-cache:
+
+networks:
+  kafka-net:
+    driver: bridge
+    name: pulso-vivo-network

@@ -1,0 +1,23 @@
+<!-- Loading state during authentication initialization -->
+<div *ngIf="isInitializing" class="loading-container">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Inicializando PulsoVivo...</p>
+  </div>
+</div>
+
+<!-- Error state if authentication fails -->
+<div *ngIf="authError && !isInitializing" class="error-container">
+  <div class="error-message">
+    <h3>Error de Autenticación</h3>
+    <p>{{ authError }}</p>
+    <button (click)="window.location.reload()" class="retry-button">
+      Reintentar
+    </button>
+  </div>
+</div>
+
+<!-- Main application content -->
+<div *ngIf="!isInitializing && !authError">
+  <router-outlet />
+</div>

@@ -1,0 +1,27 @@
+meta {
+  name: Get  changed prices
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{host_rabbit}}/api/monitoring/products/with-price-changes
+  body: none
+  auth: none
+}
+
+body:json {
+   {
+      "name": "Laptop Dell XPS 13",
+      "description": "High-performance ultrabook with 13-inch display",
+      "quantity": 25,
+      "category": "Electronics",
+      "active": true,
+      "price": null,
+      "lastPriceUpdate": null,
+      "previousPrice": null,
+      "version": null,
+      "priceChangeAmount": 0,
+      "priceChangePercentage": 0
+    }
+}

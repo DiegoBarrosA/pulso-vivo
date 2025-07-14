@@ -1,0 +1,28 @@
+meta {
+  name: Update product
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{host_inventory}}/api/inventory/products/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+   {
+      "id": 1,
+      "name": "Laptop Dell XPS 13",
+      "description": "High-performance ultrabook with 13-inch display",
+      "quantity": 23,
+      "category": "Electronics",
+      "active": true,
+      "price": 1299.99,
+      "lastPriceUpdate": "2025-07-13T21:47:21.436221",
+      "previousPrice": 1199.99,
+      "version": 1,
+      "priceChangeAmount": 100,
+      "priceChangePercentage": 8.33
+    }
+}

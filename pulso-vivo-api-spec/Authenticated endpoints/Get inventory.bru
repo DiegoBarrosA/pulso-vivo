@@ -1,0 +1,11 @@
+meta {
+  name: Get inventory
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host_inventory}}/api/inventory/products
+  body: none
+  auth: inherit
+}

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.1.5</version>
+        <relativePath/>
+        </parent>
+        <groupId>com.pulso</groupId>
+        <artifactId>pulso-vivo-kafka-productor-ventas</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <name>pulso-vivo-kafka-productor-ventas</name>
+        <description>Kafka producer for sales</description>
+        <properties>
+            <java.version>17</java.version>
+            <spring-kafka.version>3.0.12</spring-kafka.version>
+            </properties>
+            <repositories>
+                <repository>
+                    <id>oracle</id>
+                    <name>Oracle Maven Repository</name>
+                    <url>https://maven.oracle.com</url>
+                    <layout>default</layout>
+                </repository>
+            </repositories>
+            <dependencies>
+                <dependency>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                    <optional>true</optional>
+                </dependency>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-data-jpa</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.springframework.kafka</groupId>
+                            <artifactId>spring-kafka</artifactId>
+                            <version>${spring-kafka.version}</version>
+                            </dependency>
+
+                            <!-- Oracle JDBC - Use this instead of separate dependencies -->
+                            <dependency>
+                                <groupId>com.oracle.database.jdbc</groupId>
+                                <artifactId>ojdbc11</artifactId>
+                                <version>21.9.0.0</version>
+                            </dependency>
+
+                            <!-- Oracle UCP (Universal Connection Pool) - Contains OracleDataSource -->
+                            <dependency>
+                                <groupId>com.oracle.database.jdbc</groupId>
+                                <artifactId>ucp</artifactId>
+                                <version>21.9.0.0</version>
+                            </dependency>
+
+                            <!-- Oracle Security for Wallet -->
+                            <dependency>
+                                <groupId>com.oracle.database.security</groupId>
+                                <artifactId>oraclepki</artifactId>
+                                <version>21.9.0.0</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.oracle.database.security</groupId>
+                                <artifactId>osdt_core</artifactId>
+                                <version>21.9.0.0</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.oracle.database.security</groupId>
+                                <artifactId>osdt_cert</artifactId>
+                                <version>21.9.0.0</version>
+                            </dependency>
+                                            <dependency>
+                                                <groupId>org.springframework.boot</groupId>
+                                                <artifactId>spring-boot-starter-test</artifactId>
+                                                <scope>test</scope>
+                                                </dependency>
+                                                <dependency>
+                                                    <groupId>org.springframework.kafka</groupId>
+                                                    <artifactId>spring-kafka-test</artifactId>
+                                                    <scope>test</scope>
+                                                    </dependency>
+                                                    <dependency>
+                                                        <groupId>org.springframework.boot</groupId>
+                                                        <artifactId>spring-boot-starter-actuator</artifactId>
+                                                        </dependency>
+                                                        </dependencies>
+
+                                                        <build>
+                                                            <plugins>
+                                                                <plugin>
+                                                                    <groupId>org.springframework.boot</groupId>
+                                                                    <artifactId>spring-boot-maven-plugin</artifactId>
+                                                                    </plugin>
+                                                                    </plugins>
+                                                                    </build>
+                                                                </project>

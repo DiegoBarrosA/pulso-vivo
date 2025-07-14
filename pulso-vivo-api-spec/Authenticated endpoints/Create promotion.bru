@@ -1,0 +1,15 @@
+meta {
+  name: Create promotion
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{host_promotions}}/api/promotions
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {"productId": "1"}
+}

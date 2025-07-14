@@ -1,0 +1,768 @@
+{
+  "info": {
+    "name": "Pulso Vivo Kafka System API",
+    "description": "Complete API collection for testing the Pulso Vivo Kafka microservices system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost",
+      "type": "string"
+    },
+    {
+      "key": "salesPort",
+      "value": "8081",
+      "type": "string"
+    },
+    {
+      "key": "inventoryPort",
+      "value": "8083",
+      "type": "string"
+    },
+    {
+      "key": "consumerProducerPort",
+      "value": "8084",
+      "type": "string"
+    },
+    {
+      "key": "promotionsPort",
+      "value": "8085",
+      "type": "string"
+    },
+    {
+      "key": "kafkaUIPort",
+      "value": "8095",
+      "type": "string"
+    },
+    {
+      "key": "rabbitMQPort",
+      "value": "15672",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Checks",
+      "item": [
+        {
+          "name": "Sales Producer Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{salesPort}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "port": "{{salesPort}}",
+              "path": ["actuator", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inventory Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{inventoryPort}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "port": "{{inventoryPort}}",
+              "path": ["actuator", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consumer-Producer Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{consumerProducerPort}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "port": "{{consumerProducerPort}}",
+              "path": ["actuator", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Promotions Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{promotionsPort}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "port": "{{promotionsPort}}",
+              "path": ["actuator", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consumer-Producer Service Health API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{consumerProducerPort}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "port": "{{consumerProducerPort}}",
+              "path": ["api", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inventory Service Health API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{inventoryPort}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "port": "{{inventoryPort}}",
+              "path": ["api", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Sales Producer Service",
+      "item": [
+        {
+          "name": "Create Sale",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoProducto\": \"PROD001\",\n  \"cantidad\": 5,\n  \"precioUnitario\": 199.99,\n  \"clienteId\": \"CLIENT001\",\n  \"canalVenta\": \"ONLINE\",\n  \"ubicacion\": \"STORE_CENTRAL\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{salesPort}}/api/ventas",
+              "host": ["{{baseUrl}}"],
+              "port": "{{salesPort}}",
+              "path": ["api", "ventas"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recent Sales",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{salesPort}}/api/ventas/recientes",
+              "host": ["{{baseUrl}}"],
+              "port": "{{salesPort}}",
+              "path": ["api", "ventas", "recientes"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Inventory Service",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{inventoryPort}}/api/inventory/products",
+              "host": ["{{baseUrl}}"],
+              "port": "{{inventoryPort}}",
+              "path": ["api", "inventory", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{inventoryPort}}/api/inventory/products/1",
+              "host": ["{{baseUrl}}"],
+              "port": "{{inventoryPort}}",
+              "path": ["api", "inventory", "products", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Product\",\n  \"description\": \"Product description\",\n  \"price\": 99.99,\n  \"quantity\": 100,\n  \"category\": \"Electronics\",\n  \"sku\": \"SKU001\",\n  \"minStockLevel\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{inventoryPort}}/api/inventory/products",
+              "host": ["{{baseUrl}}"],
+              "port": "{{inventoryPort}}",
+              "path": ["api", "inventory", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Product\",\n  \"description\": \"Updated description\",\n  \"price\": 109.99,\n  \"quantity\": 95,\n  \"category\": \"Electronics\",\n  \"sku\": \"SKU001\",\n  \"minStockLevel\": 15\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{inventoryPort}}/api/inventory/products/1",
+              "host": ["{{baseUrl}}"],
+              "port": "{{inventoryPort}}",
+              "path": ["api", "inventory", "products", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{inventoryPort}}/api/inventory/products/1",
+              "host": ["{{baseUrl}}"],
+              "port": "{{inventoryPort}}",
+              "path": ["api", "inventory", "products", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Low Stock Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{inventoryPort}}/api/inventory/products/low-stock",
+              "host": ["{{baseUrl}}"],
+              "port": "{{inventoryPort}}",
+              "path": ["api", "inventory", "products", "low-stock"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product Inventory",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"quantityChange\": -5,\n  \"reason\": \"Sale\",\n  \"reference\": \"SALE-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{inventoryPort}}/api/inventory/update",
+              "host": ["{{baseUrl}}"],
+              "port": "{{inventoryPort}}",
+              "path": ["api", "inventory", "update"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Consumer-Producer Service",
+      "item": [
+        {
+          "name": "Get Recent Stock Movements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{consumerProducerPort}}/api/stock/recent",
+              "host": ["{{baseUrl}}"],
+              "port": "{{consumerProducerPort}}",
+              "path": ["api", "stock", "recent"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stock by Product Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{consumerProducerPort}}/api/stock/producto/PROD001",
+              "host": ["{{baseUrl}}"],
+              "port": "{{consumerProducerPort}}",
+              "path": ["api", "stock", "producto", "PROD001"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stock Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{consumerProducerPort}}/api/stock/stats/PROD001",
+              "host": ["{{baseUrl}}"],
+              "port": "{{consumerProducerPort}}",
+              "path": ["api", "stock", "stats", "PROD001"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Promotions Service",
+      "item": [
+        {
+          "name": "Generate Promotion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"PROD001\",\n  \"requestedBy\": \"SYSTEM\",\n  \"reason\": \"Low sales and high stock\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{promotionsPort}}/api/promotions/generate",
+              "host": ["{{baseUrl}}"],
+              "port": "{{promotionsPort}}",
+              "path": ["api", "promotions", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Promotions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{promotionsPort}}/api/promotions/active",
+              "host": ["{{baseUrl}}"],
+              "port": "{{promotionsPort}}",
+              "path": ["api", "promotions", "active"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Promotions by Product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{promotionsPort}}/api/promotions/product/PROD001",
+              "host": ["{{baseUrl}}"],
+              "port": "{{promotionsPort}}",
+              "path": ["api", "promotions", "product", "PROD001"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Promotions Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{promotionsPort}}/api/promotions/health",
+              "host": ["{{baseUrl}}"],
+              "port": "{{promotionsPort}}",
+              "path": ["api", "promotions", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Price Monitoring Service",
+      "item": [
+        {
+          "name": "Enable Price Monitoring",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8082/api/price-monitoring/enable",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["api", "price-monitoring", "enable"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Disable Price Monitoring",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8082/api/price-monitoring/disable",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["api", "price-monitoring", "disable"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Monitoring Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8082/api/price-monitoring/status",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["api", "price-monitoring", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Products (Price Monitor)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8082/api/monitoring/products",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["api", "monitoring", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID (Price Monitor)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8082/api/monitoring/products/1",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["api", "monitoring", "products", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product Price",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Product\",\n  \"price\": 149.99,\n  \"category\": \"Electronics\",\n  \"description\": \"Updated product description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8082/api/monitoring/products/1",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["api", "monitoring", "products", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Sales Monitoring Service",
+      "item": [
+        {
+          "name": "Get Active Products for Monitoring",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8086/api/monitoring/products/active",
+              "host": ["{{baseUrl}}"],
+              "port": "8086",
+              "path": ["api", "monitoring", "products", "active"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID (Sales Monitor)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8086/api/monitoring/products/1",
+              "host": ["{{baseUrl}}"],
+              "port": "8086",
+              "path": ["api", "monitoring", "products", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8086/api/monitoring/products/category/Electronics",
+              "host": ["{{baseUrl}}"],
+              "port": "8086",
+              "path": ["api", "monitoring", "products", "category", "Electronics"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. RabbitMQ Integration",
+      "item": [
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "\"Test message from Postman\""
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8082/api/mensajes",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["api", "mensajes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send User Object",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"age\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8082/api/usuarios",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["api", "usuarios"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Product Object",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Product\",\n  \"price\": 99.99,\n  \"category\": \"Electronics\",\n  \"description\": \"Test product description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:8082/api/productos",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["api", "productos"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create RabbitMQ Queue",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8082/rabbit-admin/colas/test-queue",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["rabbit-admin", "colas", "test-queue"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create RabbitMQ Exchange",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:8082/rabbit-admin/exchanges/test-exchange",
+              "host": ["{{baseUrl}}"],
+              "port": "8082",
+              "path": ["rabbit-admin", "exchanges", "test-exchange"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Integration Tests",
+      "item": [
+        {
+          "name": "End-to-End Sale Flow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoProducto\": \"INTEGRATION_TEST_{{$timestamp}}\",\n  \"cantidad\": 3,\n  \"precioUnitario\": 79.99,\n  \"clienteId\": \"E2E_CLIENT_{{$timestamp}}\",\n  \"canalVenta\": \"POSTMAN_TEST\",\n  \"ubicacion\": \"INTEGRATION_TESTING\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{salesPort}}/api/ventas",
+              "host": ["{{baseUrl}}"],
+              "port": "{{salesPort}}",
+              "path": ["api", "ventas"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Promotion After Sale",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"INTEGRATION_TEST_{{$timestamp}}\",\n  \"requestedBy\": \"POSTMAN_E2E\",\n  \"reason\": \"End-to-end integration test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}:{{promotionsPort}}/api/promotions/generate",
+              "host": ["{{baseUrl}}"],
+              "port": "{{promotionsPort}}",
+              "path": ["api", "promotions", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Stock Movement",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{consumerProducerPort}}/api/stock/recent",
+              "host": ["{{baseUrl}}"],
+              "port": "{{consumerProducerPort}}",
+              "path": ["api", "stock", "recent"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10. External Services",
+      "item": [
+        {
+          "name": "Access Kafka UI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{kafkaUIPort}}",
+              "host": ["{{baseUrl}}"],
+              "port": "{{kafkaUIPort}}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Access RabbitMQ Management",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}:{{rabbitMQPort}}",
+              "host": ["{{baseUrl}}"],
+              "port": "{{rabbitMQPort}}"
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

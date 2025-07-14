@@ -1,0 +1,213 @@
+<div class="tienda-container">
+  <!-- Header de la tienda -->
+  <header class="tienda-header">
+    <div class="container">
+      <h1 class="titulo-principal">
+        <i class="bi bi-heart-pulse"></i>
+        PulsoVivo - Tienda de Implementos Médicos
+      </h1>
+      <p class="subtitulo">Tu aliado en salud y equipamiento médico profesional</p>
+    </div>
+  </header>
+
+  <!-- Barra de navegación y autenticación -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-content">
+        <div class="nav-left">
+          <button class="btn btn-outline-primary" (click)="limpiarFiltros()">
+            <i class="bi bi-house"></i> Inicio
+          </button>
+        </div>
+        <div class="nav-right">
+          <div *ngIf="isAuthenticated$ | async; else loginButton" class="user-menu">
+            <span class="usuario-saludo">¡Hola, Usuario!</span>
+            <a routerLink="/administracion" class="btn btn-success me-2">
+              <i class="bi bi-gear"></i> Administración
+            </a>
+            <button class="btn btn-outline-danger" (click)="cerrarSesion()">
+              <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+            </button>
+          </div>
+          <ng-template #loginButton>
+            <button class="btn btn-primary" (click)="iniciarSesion()">
+              <i class="bi bi-person-circle"></i> Iniciar Sesión
+            </button>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sección de filtros y búsqueda -->
+  <section class="filtros-section">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="buscador">
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="bi bi-search"></i>
+              </span>
+              <input 
+                type="text" 
+                class="form-control" 
+                placeholder="Buscar productos médicos..."
+                #busquedaInput
+                (input)="buscarProductos(busquedaInput.value)">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <select 
+            class="form-select" 
+            (change)="filtrarPorCategoria($any($event.target).value)">
+            <option value="">Todas las categorías</option>
+            <option *ngFor="let categoria of categorias" [value]="categoria">
+              {{ categoria }}
+            </option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Filtros activos -->
+      <div class="filtros-activos mt-3" *ngIf="categoriaSeleccionada || terminoBusqueda">
+        <h6>Filtros activos:</h6>
+        <span class="badge bg-primary me-2" *ngIf="categoriaSeleccionada">
+          Categoría: {{ categoriaSeleccionada }}
+          <i class="bi bi-x ms-1" style="cursor: pointer;" (click)="filtrarPorCategoria('')"></i>
+        </span>
+        <span class="badge bg-info me-2" *ngIf="terminoBusqueda">
+          Búsqueda: "{{ terminoBusqueda }}"
+          <i class="bi bi-x ms-1" style="cursor: pointer;" (click)="buscarProductos('')"></i>
+        </span>
+        <button class="btn btn-sm btn-outline-secondary" (click)="limpiarFiltros()">
+          <i class="bi bi-arrow-clockwise"></i> Limpiar todos
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Grid de productos -->
+  <main class="productos-main">
+    <div class="container">
+      <div class="productos-header mb-4">
+        <h2>Productos Disponibles</h2>
+        <p class="text-muted">{{ productosFiltrados.length }} productos encontrados</p>
+      </div>
+
+      <!-- Mensaje cuando no hay productos -->
+      <div *ngIf="productosFiltrados.length === 0" class="no-productos">
+        <div class="alert alert-info text-center">
+          <i class="bi bi-search display-4 text-muted"></i>
+          <h4 class="mt-3">No se encontraron productos</h4>
+          <p>Intenta ajustar tus filtros de búsqueda</p>
+          <button class="btn btn-primary" (click)="limpiarFiltros()">
+            <i class="bi bi-arrow-clockwise"></i> Mostrar todos los productos
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid de productos -->
+      <div class="row productos-grid" *ngIf="productosFiltrados.length > 0">
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4" *ngFor="let producto of productosFiltrados">
+          <div class="card producto-card h-100" [class.agotado]="!producto.enStock">
+            <!-- Imagen del producto -->
+            <div class="producto-imagen">
+              <img 
+                [src]="producto.imagen || 'assets/images/producto-placeholder.jpg'" 
+                [alt]="producto.name || producto.nombre"
+                class="card-img-top"
+                (error)="$any($event.target).src = 'assets/images/producto-placeholder.jpg'">
+              
+              <!-- Badge de estado -->
+              <div class="estado-badge">
+                <span class="badge bg-success" *ngIf="producto.enStock && (producto.cantidadDisponible || 0) > 10">
+                  <i class="bi bi-check-circle"></i> Disponible
+                </span>
+                <span class="badge bg-warning" *ngIf="producto.enStock && (producto.cantidadDisponible || 0) <= 10 && (producto.cantidadDisponible || 0) > 0">
+                  <i class="bi bi-exclamation-triangle"></i> Últimas unidades
+                </span>
+                <span class="badge bg-danger" *ngIf="!producto.enStock || (producto.cantidadDisponible || 0) === 0">
+                  <i class="bi bi-x-circle"></i> Agotado
+                </span>
+              </div>
+            </div>
+
+            <!-- Contenido de la tarjeta -->
+            <div class="card-body d-flex flex-column">
+              <div class="categoria-tag">
+                <small class="text-muted">{{ producto.category || producto.categoria }}</small>
+              </div>
+              
+              <h5 class="card-title">{{ producto.name || producto.nombre }}</h5>
+              <p class="card-text text-muted flex-grow-1">{{ producto.description || producto.descripcion }}</p>
+              
+              <div class="producto-info mt-auto">
+                <div class="precio-info mb-3">
+                  <span class="precio">{{ (producto.precio || 0) | currency:'EUR':'symbol':'1.2-2':'es' }}</span>
+                  <small class="text-muted ms-2" *ngIf="producto.enStock || (producto.quantity || producto.cantidadDisponible || 0) > 0">
+                    ({{ producto.quantity || producto.cantidadDisponible }} disponibles)
+                  </small>
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="acciones">
+                  <button 
+                    class="btn btn-primary me-2 flex-grow-1"
+                    [disabled]="!producto.enStock || (producto.cantidadDisponible || 0) === 0"
+                    (click)="agregarAlCarrito(producto)">
+                    <i class="bi bi-cart-plus"></i>
+                    <span *ngIf="producto.enStock && (producto.cantidadDisponible || 0) > 0">Agregar</span>
+                    <span *ngIf="!producto.enStock || (producto.cantidadDisponible || 0) === 0">Agotado</span>
+                  </button>
+                  
+                  <button 
+                    class="btn btn-outline-info"
+                    (click)="verDetalle(producto)"
+                    title="Ver detalles">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="tienda-footer mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5><i class="bi bi-heart-pulse"></i> PulsoVivo</h5>
+          <p>Especialistas en equipamiento médico profesional con más de 10 años de experiencia.</p>
+        </div>
+        <div class="col-md-4">
+          <h6>Categorías</h6>
+          <ul class="list-unstyled">
+            <li *ngFor="let categoria of categorias">
+              <a href="#" (click)="filtrarPorCategoria(categoria); $event.preventDefault()">
+                {{ categoria }}
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6>Información</h6>
+          <ul class="list-unstyled">
+            <li><i class="bi bi-telephone"></i> +34 900 123 456</li>
+            <li><i class="bi bi-envelope"></i> info&#64;pulsovivo.com</li>
+            <li><i class="bi bi-geo-alt"></i> Madrid, España</li>
+          </ul>
+        </div>
+      </div>
+      <hr>
+      <div class="text-center">
+        <p class="mb-0">&copy; 2024 PulsoVivo. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+</div>

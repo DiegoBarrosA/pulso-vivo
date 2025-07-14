@@ -1,0 +1,8 @@
+{
+  "/api/*": {
+    "target": "https://erwqz80g2d.execute-api.us-east-1.amazonaws.com",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

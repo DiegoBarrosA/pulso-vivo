@@ -1,0 +1,394 @@
+/* You can add global styles to this file, and also import other style files */
+
+// === IMPORTACIONES ===
+@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css');
+
+// === VARIABLES GLOBALES ===
+@primary-color: #0066cc;
+@secondary-color: #28a745;
+@accent-color: #17a2b8;
+@danger-color: #dc3545;
+@warning-color: #ffc107;
+@info-color: #17a2b8;
+@dark-color: #343a40;
+@light-bg: #f8f9fa;
+@white: #ffffff;
+@border-color: #dee2e6;
+@muted-text: #6c757d;
+@dark-text: #333333;
+
+// === ESTILOS BASE ===
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: @dark-text;
+  background-color: @light-bg;
+}
+
+// === UTILIDADES DE BOOTSTRAP ===
+.container {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 1200px;
+}
+
+.container-fluid {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
+}
+
+.col-12 { flex: 0 0 100%; max-width: 100%; }
+.col-lg-3 { flex: 0 0 25%; max-width: 25%; }
+.col-md-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+.col-md-6 { flex: 0 0 50%; max-width: 50%; }
+.col-md-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
+.col-md-12 { flex: 0 0 100%; max-width: 100%; }
+.col-sm-6 { flex: 0 0 50%; max-width: 50%; }
+
+[class*="col-"] {
+  position: relative;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+// === COMPONENTES DE FORMULARIO ===
+.form-control, .form-select {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: @dark-text;
+  background-color: @white;
+  border: 1px solid @border-color;
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+  &:focus {
+    color: @dark-text;
+    background-color: @white;
+    border-color: lighten(@primary-color, 25%);
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+  }
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  width: 100%;
+
+  .input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: @dark-text;
+    text-align: center;
+    white-space: nowrap;
+    background-color: @light-bg;
+    border: 1px solid @border-color;
+    border-radius: 0.375rem;
+  }
+
+  .form-control {
+    position: relative;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+  }
+}
+
+// === BOTONES ===
+.btn {
+  display: inline-block;
+  font-weight: 400;
+  line-height: 1.5;
+  color: @dark-text;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+  }
+
+  &:disabled {
+    pointer-events: none;
+    opacity: 0.65;
+  }
+}
+
+.btn-primary {
+  color: @white;
+  background-color: @primary-color;
+  border-color: @primary-color;
+
+  &:hover {
+    background-color: darken(@primary-color, 7.5%);
+    border-color: darken(@primary-color, 10%);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.5);
+  }
+}
+
+.btn-success {
+  color: @white;
+  background-color: @secondary-color;
+  border-color: @secondary-color;
+
+  &:hover {
+    background-color: darken(@secondary-color, 7.5%);
+    border-color: darken(@secondary-color, 10%);
+  }
+}
+
+.btn-outline-primary {
+  color: @primary-color;
+  border-color: @primary-color;
+
+  &:hover {
+    color: @white;
+    background-color: @primary-color;
+    border-color: @primary-color;
+  }
+}
+
+.btn-outline-danger {
+  color: @danger-color;
+  border-color: @danger-color;
+
+  &:hover {
+    color: @white;
+    background-color: @danger-color;
+    border-color: @danger-color;
+  }
+}
+
+.btn-outline-secondary {
+  color: @muted-text;
+  border-color: @border-color;
+
+  &:hover {
+    color: @white;
+    background-color: @muted-text;
+    border-color: @muted-text;
+  }
+}
+
+.btn-group {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+
+  .btn {
+    position: relative;
+    flex: 1 1 auto;
+
+    &:not(:first-child) {
+      margin-left: -1px;
+    }
+
+    &:first-child {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    &:last-child {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    &:not(:first-child):not(:last-child) {
+      border-radius: 0;
+    }
+  }
+}
+
+// === TARJETAS ===
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  word-wrap: break-word;
+  background-color: @white;
+  background-clip: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.375rem;
+
+  .card-body {
+    flex: 1 1 auto;
+    padding: 1rem;
+  }
+
+  .card-title {
+    margin-bottom: 0.5rem;
+  }
+
+  .card-text:last-child {
+    margin-bottom: 0;
+  }
+
+  .card-img-top {
+    width: 100%;
+    border-top-left-radius: calc(0.375rem - 1px);
+    border-top-right-radius: calc(0.375rem - 1px);
+  }
+}
+
+// === TABLA ===
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: @dark-text;
+  vertical-align: top;
+  border-color: @border-color;
+
+  th, td {
+    padding: 0.5rem;
+    border-bottom: 1px solid @border-color;
+  }
+
+  thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid @border-color;
+  }
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+
+// === BADGES ===
+.badge {
+  display: inline-block;
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  color: @white;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem;
+}
+
+.bg-primary { background-color: @primary-color !important; }
+.bg-success { background-color: @secondary-color !important; }
+.bg-info { background-color: @info-color !important; }
+.bg-warning { background-color: @warning-color !important; color: @dark-text !important; }
+.bg-danger { background-color: @danger-color !important; }
+.bg-secondary { background-color: @muted-text !important; }
+
+// === ALERTAS ===
+.alert {
+  position: relative;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+}
+
+.alert-info {
+  color: #0c5460;
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+}
+
+// === UTILIDADES ===
+.text-center { text-align: center !important; }
+.text-end { text-align: end !important; }
+.text-muted { color: @muted-text !important; }
+
+.d-flex { display: flex !important; }
+.d-block { display: block !important; }
+.d-none { display: none !important; }
+
+.flex-column { flex-direction: column !important; }
+.flex-grow-1 { flex-grow: 1 !important; }
+.align-items-center { align-items: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.justify-content-center { justify-content: center !important; }
+
+.w-100 { width: 100% !important; }
+.h-100 { height: 100% !important; }
+
+.mb-0 { margin-bottom: 0 !important; }
+.mb-2 { margin-bottom: 0.5rem !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.mb-4 { margin-bottom: 1.5rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.mt-auto { margin-top: auto !important; }
+.me-2 { margin-right: 0.5rem !important; }
+.me-3 { margin-right: 1rem !important; }
+.ms-1 { margin-left: 0.25rem !important; }
+.ms-2 { margin-left: 0.5rem !important; }
+
+.py-4 { padding: 1.5rem 0 !important; }
+.py-5 { padding: 3rem 0 !important; }
+
+// === RESPONSIVE ===
+@media (max-width: 768px) {
+  .col-md-4 { flex: 0 0 100%; max-width: 100%; }
+  .col-md-6 { flex: 0 0 100%; max-width: 100%; }
+  .col-md-8 { flex: 0 0 100%; max-width: 100%; }
+  .col-md-12 { flex: 0 0 100%; max-width: 100%; }
+  
+  .container {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .col-sm-6 { flex: 0 0 100%; max-width: 100%; }
+  .col-lg-3 { flex: 0 0 100%; max-width: 100%; }
+}

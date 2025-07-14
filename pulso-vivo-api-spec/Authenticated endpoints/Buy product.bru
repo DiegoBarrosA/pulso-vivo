@@ -1,0 +1,15 @@
+meta {
+  name: Buy product
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host_inventory}}/api/inventory/products/1/buy?quantity=2
+  body: none
+  auth: inherit
+}
+
+params:query {
+  quantity: 2
+}
