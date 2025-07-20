@@ -3,7 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
-import { ApiService, ProductoApi } from '../../services/api.service';
+import { ApiService, ProductoApi, PromotionResponse, PromotionRequest } from '../../services/api.service';
 import { Observable } from 'rxjs';
 
 export interface ProductoStock {
@@ -44,12 +44,16 @@ export interface MovimientoStock {
 })
 export class AdministracionComponent implements OnInit, AfterViewInit {
   // Estado del componente
-  vistaActual: 'inventario' | 'movimientos' | 'reportes' = 'inventario';
+  vistaActual: 'inventario' | 'movimientos' | 'promociones' | 'reportes' = 'inventario';
   
   // Datos del inventario
   productos: ProductoStock[] = [];
   productosFiltrados: ProductoStock[] = [];
   movimientos: MovimientoStock[] = [];
+  
+  // Datos de promociones
+  promociones: PromotionResponse[] = [];
+  promocionesActivas: PromotionResponse[] = [];
   
   // Filtros y búsqueda
   terminoBusqueda: string = '';
@@ -59,8 +63,18 @@ export class AdministracionComponent implements OnInit, AfterViewInit {
   
   // Modal y formularios
   mostrarModal: boolean = false;
+  mostrarModalPromocion: boolean = false;
   modoModal: 'crear' | 'editar' | 'movimiento' = 'crear';
   productoSeleccionado: ProductoStock | null = null;
+  
+  // Formulario de promoción
+  formularioPromocion = {
+    reason: '',
+    requestedBy: 'ADMIN'
+  };
+  
+  // Estado de carga para promociones
+  generandoPromocion: boolean = false;
   
   // Formulario de producto
   formularioProducto: Partial<ProductoStock> = {
@@ -113,6 +127,7 @@ export class AdministracionComponent implements OnInit, AfterViewInit {
       this.cargarProductos();
       this.cargarCategorias();
       this.cargarMovimientos();
+      this.cargarPromocionesActivas();
     }
   }
 
@@ -269,7 +284,7 @@ export class AdministracionComponent implements OnInit, AfterViewInit {
   }
 
   // === NAVEGACIÓN ===
-  cambiarVista(vista: 'inventario' | 'movimientos' | 'reportes'): void {
+  cambiarVista(vista: 'inventario' | 'movimientos' | 'promociones' | 'reportes'): void {
     this.vistaActual = vista;
   }
 
@@ -641,6 +656,98 @@ export class AdministracionComponent implements OnInit, AfterViewInit {
     // Implementar exportación a CSV/Excel
     console.log('Exportando inventario...');
     alert('Funcionalidad de exportación en desarrollo');
+  }
+
+  // === MÉTODOS PARA PROMOCIONES ===
+
+  /**
+   * Abre el modal para generar una promoción para un producto específico
+   */
+  abrirModalPromocion(producto: ProductoStock): void {
+    this.productoSeleccionado = producto;
+    this.mostrarModalPromocion = true;
+    // Reset form
+    this.formularioPromocion = {
+      reason: '',
+      requestedBy: 'ADMIN'
+    };
+  }
+
+  /**
+   * Cierra el modal de promoción
+   */
+  cerrarModalPromocion(): void {
+    this.mostrarModalPromocion = false;
+    this.productoSeleccionado = null;
+    this.generandoPromocion = false;
+  }
+
+  /**
+   * Genera una promoción para el producto seleccionado
+   */
+  generarPromocion(): void {
+    if (!this.productoSeleccionado || !this.formularioPromocion.reason) {
+      alert('Por favor, complete todos los campos requeridos.');
+      return;
+    }
+
+    this.generandoPromocion = true;
+    const productId = this.productoSeleccionado.id.toString();
+    
+    this.apiService.generarPromocion(
+      productId,
+      this.formularioPromocion.requestedBy,
+      this.formularioPromocion.reason
+    ).subscribe({
+      next: (promocion) => {
+        console.log('Promoción generada exitosamente:', promocion);
+        alert(`Promoción generada exitosamente para ${this.productoSeleccionado?.name || this.productoSeleccionado?.nombre}!\nDescuento: ${promocion.discountPercentage}%`);
+        this.cerrarModalPromocion();
+        this.cargarPromocionesActivas(); // Refresh active promotions
+      },
+      error: (error) => {
+        console.error('Error generating promotion:', error);
+        alert('Error al generar la promoción. Por favor, inténtelo de nuevo.');
+        this.generandoPromocion = false;
+      }
+    });
+  }
+
+  /**
+   * Carga las promociones activas
+   */
+  cargarPromocionesActivas(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    this.apiService.getPromocionesActivas().subscribe({
+      next: (promociones) => {
+        this.promocionesActivas = promociones;
+        console.log('Promociones activas cargadas:', promociones);
+      },
+      error: (error) => {
+        console.error('Error loading active promotions:', error);
+      }
+    });
+  }
+
+  /**
+   * Verifica si un producto tiene promociones activas
+   */
+  tienePromocionActiva(productoId: number): boolean {
+    return this.promocionesActivas.some(p => 
+      p.productId === productoId.toString() && p.isActive
+    );
+  }
+
+  /**
+   * Obtiene la promoción activa para un producto (si existe)
+   */
+  getPromocionActiva(productoId: number): PromotionResponse | null {
+    return this.promocionesActivas.find(p => 
+      p.productId === productoId.toString() && p.isActive
+    ) || null;
   }
 
   async cerrarSesion(): Promise<void> {

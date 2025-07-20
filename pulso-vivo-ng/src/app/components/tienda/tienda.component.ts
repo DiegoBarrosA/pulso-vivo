@@ -12,6 +12,12 @@ export interface ProductoMedico {
   quantity: number;
   category: string;
   active: boolean;
+  price?: number;
+  lastPriceUpdate?: string;
+  previousPrice?: number;
+  version?: number;
+  priceChangeAmount?: number;
+  priceChangePercentage?: number;
   // Legacy fields for display compatibility
   nombre?: string;
   descripcion?: string;
@@ -80,8 +86,8 @@ export class TiendaComponent implements OnInit, AfterViewInit {
             cantidadDisponible: p.quantity,
             categoria: p.category,
             enStock: p.quantity > 0,
-            // Default values for fields not in API
-            precio: 0, // Price not available in inventory service
+            // Convert USD prices to Chilean Pesos (1 USD ≈ 950 CLP)
+            precio: p.price ? Math.round(p.price * 950) : 0,
             imagen: 'assets/images/producto-placeholder.jpg'
           }));
         this.productosFiltrados = [...this.productos];
@@ -123,7 +129,7 @@ export class TiendaComponent implements OnInit, AfterViewInit {
         // Legacy mappings
         nombre: 'Tensiómetro Digital',
         descripcion: 'Tensiómetro automático de brazo con pantalla LCD',
-        precio: 89.99,
+        precio: 80900,
         categoria: 'Equipos de Diagnóstico',
         imagen: 'assets/images/tensiometro.jpg',
         enStock: true,
@@ -139,7 +145,7 @@ export class TiendaComponent implements OnInit, AfterViewInit {
         // Legacy mappings
         nombre: 'Estetoscopio Profesional',
         descripcion: 'Estetoscopio de doble campana para adultos',
-        precio: 45.50,
+        precio: 40950,
         categoria: 'Equipos de Diagnóstico',
         imagen: 'assets/images/estetoscopio.jpg',
         enStock: true,
@@ -155,7 +161,7 @@ export class TiendaComponent implements OnInit, AfterViewInit {
         // Legacy mappings
         nombre: 'Termómetro Infrarrojo',
         descripcion: 'Termómetro sin contacto para frente',
-        precio: 25.99,
+        precio: 23390,
         categoria: 'Equipos de Diagnóstico',
         imagen: 'assets/images/termometro.jpg',
         enStock: false,
@@ -171,7 +177,7 @@ export class TiendaComponent implements OnInit, AfterViewInit {
         // Legacy mappings
         nombre: 'Guantes de Nitrilo (100 unidades)',
         descripcion: 'Guantes desechables sin polvo, talla M',
-        precio: 12.99,
+        precio: 11690,
         categoria: 'Suministros Desechables',
         imagen: 'assets/images/guantes.jpg',
         enStock: true,
@@ -187,7 +193,7 @@ export class TiendaComponent implements OnInit, AfterViewInit {
         // Legacy mappings
         nombre: 'Mascarillas Quirúrgicas (50 unidades)',
         descripcion: 'Mascarillas desechables de 3 capas',
-        precio: 8.99,
+        precio: 8090,
         categoria: 'Suministros Desechables',
         imagen: 'assets/images/mascarillas.jpg',
         enStock: true,
@@ -203,7 +209,7 @@ export class TiendaComponent implements OnInit, AfterViewInit {
         // Legacy mappings
         nombre: 'Jeringuillas Desechables (100 unidades)',
         descripcion: 'Jeringuillas de 5ml con aguja',
-        precio: 15.99,
+        precio: 14390,
         categoria: 'Suministros Desechables',
         imagen: 'assets/images/jeringuillas.jpg',
         enStock: true,
@@ -219,7 +225,7 @@ export class TiendaComponent implements OnInit, AfterViewInit {
         // Legacy mappings
         nombre: 'Camilla Plegable',
         descripcion: 'Camilla de aluminio ligera y resistente',
-        precio: 299.99,
+        precio: 269990,
         categoria: 'Mobiliario Médico',
         imagen: 'assets/images/camilla.jpg',
         enStock: true,
@@ -235,7 +241,7 @@ export class TiendaComponent implements OnInit, AfterViewInit {
         // Legacy mappings
         nombre: 'Silla de Ruedas Estándar',
         descripcion: 'Silla de ruedas manual con frenos',
-        precio: 179.99,
+        precio: 161990,
         categoria: 'Mobiliario Médico',
         imagen: 'assets/images/silla-ruedas.jpg',
         enStock: true,

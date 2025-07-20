@@ -1,0 +1,86 @@
+# Application Configuration
+server:
+  port: 8099
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: pulso-vivo-bff
+
+  # Security Configuration for Azure B2C
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://pulsovivo.b2clogin.com/tfp/82c6cf20-e689-4aa9-bedf-7acaf7c4ead7/b2c_1_pulso_vivo_register_and_login/v2.0/
+          jwk-set-uri: https://pulsovivo.b2clogin.com/tfp/82c6cf20-e689-4aa9-bedf-7acaf7c4ead7/b2c_1_pulso_vivo_register_and_login/discovery/v2.0/keys
+
+# Azure B2C Configuration
+azure:
+  b2c:
+    issuer-uri: https://pulsovivo.b2clogin.com/tfp/82c6cf20-e689-4aa9-bedf-7acaf7c4ead7/b2c_1_pulso_vivo_register_and_login/v2.0/
+    jwk-set-uri: https://pulsovivo.b2clogin.com/tfp/82c6cf20-e689-4aa9-bedf-7acaf7c4ead7/b2c_1_pulso_vivo_register_and_login/discovery/v2.0/keys
+    audience: 7549ac9c-9294-4bb3-98d6-752d12b13d81
+# Microservices URLs
+services:
+  inventory:
+    url: http://pulso-vivo-inventory:8081
+  sales:
+    url: http://pulso-vivo-producer:8081
+  monitoring:
+    url: http://pulso-vivo-consumer:8082
+  stock:
+    url: http://pulso-vivo-kafka-consumidor-ventas-productor-stock:8083
+  promotions:
+    url: http://pulso-vivo-promotions:8080
+
+# Feign Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 30000
+        loggerLevel: basic
+        errorDecoder: feign.codec.ErrorDecoder.Default
+        requestInterceptors:
+          - cl.duoc.pulsovivo.bff.config.FeignConfig
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    cl.duoc.pulsovivo.bff: DEBUG
+    org.springframework.security: DEBUG
+    feign: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always
+  health:
+    defaults:
+      enabled: true
+
+# Circuit Breaker Configuration (optional)
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 5
+  timelimiter:
+    instances:
+      default:
+        timeoutDuration: 30s

@@ -10,7 +10,7 @@ import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { environment } from '../environments/environment';
 
-// Register Spanish locale
+// Register Chilean Spanish locale
 registerLocaleData(localeEs, 'es');
 
 // MSAL Configuration

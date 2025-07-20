@@ -3,19 +3,27 @@
 // === IMPORTACIONES ===
 @import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css');
 
-// === VARIABLES GLOBALES ===
-@primary-color: #0066cc;
-@secondary-color: #28a745;
-@accent-color: #17a2b8;
-@danger-color: #dc3545;
-@warning-color: #ffc107;
-@info-color: #17a2b8;
-@dark-color: #343a40;
-@light-bg: #f8f9fa;
-@white: #ffffff;
-@border-color: #dee2e6;
-@muted-text: #6c757d;
-@dark-text: #333333;
+// === VARIABLES GLOBALES - NEW PALETTE ===
+// New color palette
+@jordy-blue: #82aaff;
+@space-cadet: #2b2d42;
+@rose-red: #ca2e55;
+@linen: #f7ece1;
+@apricot: #ffd6c0;
+
+// Mapped to semantic names
+@primary-color: @jordy-blue;        // Main brand color
+@secondary-color: @rose-red;        // Secondary/accent color
+@accent-color: @jordy-blue;         // Info/accent elements
+@danger-color: @rose-red;           // Error/danger states
+@warning-color: @apricot;           // Warning states
+@info-color: @jordy-blue;           // Info states
+@dark-color: @space-cadet;          // Dark text and elements
+@light-bg: @linen;                  // Light background
+@white: #ffffff;                    // Pure white (unchanged)
+@border-color: darken(@linen, 15%); // Darker linen for borders
+@muted-text: @space-cadet;          // Muted text using space cadet
+@dark-text: @space-cadet;           // Dark text using space cadet
 
 // === ESTILOS BASE ===
 * {
@@ -150,7 +158,7 @@ html, body {
 
   &:focus {
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(130, 170, 255, 0.25);
   }
 
   &:disabled {
@@ -170,7 +178,7 @@ html, body {
   }
 
   &:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(130, 170, 255, 0.5);
   }
 }
 
@@ -215,6 +223,73 @@ html, body {
     color: @white;
     background-color: @muted-text;
     border-color: @muted-text;
+  }
+}
+
+// Additional button variants with new color palette
+.btn-info {
+  color: @white;
+  background-color: @info-color;
+  border-color: @info-color;
+
+  &:hover {
+    background-color: darken(@info-color, 7.5%);
+    border-color: darken(@info-color, 10%);
+  }
+}
+
+.btn-outline-info {
+  color: @info-color;
+  border-color: @info-color;
+
+  &:hover {
+    color: @white;
+    background-color: @info-color;
+    border-color: @info-color;
+  }
+}
+
+.btn-outline-success {
+  color: @secondary-color;
+  border-color: @secondary-color;
+
+  &:hover {
+    color: @white;
+    background-color: @secondary-color;
+    border-color: @secondary-color;
+  }
+}
+
+.btn-outline-warning {
+  color: darken(@warning-color, 20%);
+  border-color: @warning-color;
+
+  &:hover {
+    color: @dark-text;
+    background-color: @warning-color;
+    border-color: @warning-color;
+  }
+}
+
+.btn-warning {
+  color: @dark-text;
+  background-color: @warning-color;
+  border-color: @warning-color;
+
+  &:hover {
+    background-color: darken(@warning-color, 7.5%);
+    border-color: darken(@warning-color, 10%);
+  }
+}
+
+.btn-danger {
+  color: @white;
+  background-color: @danger-color;
+  border-color: @danger-color;
+
+  &:hover {
+    background-color: darken(@danger-color, 7.5%);
+    border-color: darken(@danger-color, 10%);
   }
 }
 
@@ -338,9 +413,9 @@ html, body {
 }
 
 .alert-info {
-  color: #0c5460;
-  background-color: #d1ecf1;
-  border-color: #bee5eb;
+  color: darken(@jordy-blue, 35%);
+  background-color: lighten(@jordy-blue, 35%);
+  border-color: lighten(@jordy-blue, 25%);
 }
 
 // === UTILIDADES ===

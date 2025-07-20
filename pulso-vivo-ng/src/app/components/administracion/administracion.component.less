@@ -1,18 +1,25 @@
 // === ESTILOS PARA ADMINISTRACIÓN DE STOCK ===
 
-// Variables de colores
-@primary-color: #0066cc;
-@secondary-color: #28a745;
-@accent-color: #17a2b8;
-@danger-color: #dc3545;
-@warning-color: #ffc107;
-@info-color: #17a2b8;
-@dark-color: #343a40;
-@light-bg: #f8f9fa;
-@white: #ffffff;
-@border-color: #dee2e6;
-@muted-text: #6c757d;
-@dark-text: #333333;
+// Variables de colores - NEW PALETTE
+@jordy-blue: #82aaff;
+@space-cadet: #2b2d42;
+@rose-red: #ca2e55;
+@linen: #f7ece1;
+@apricot: #ffd6c0;
+
+// Mapped to semantic names
+@primary-color: @jordy-blue;        // Main brand color
+@secondary-color: @rose-red;        // Secondary/accent color
+@accent-color: @jordy-blue;         // Info/accent elements
+@danger-color: @rose-red;           // Error/danger states
+@warning-color: @apricot;           // Warning states
+@info-color: @jordy-blue;           // Info states
+@dark-color: @space-cadet;          // Dark text and elements
+@light-bg: @linen;                  // Light background
+@white: #ffffff;                    // Pure white (unchanged)
+@border-color: darken(@linen, 15%); // Darker linen for borders
+@muted-text: @space-cadet;          // Muted text using space cadet
+@dark-text: @space-cadet;           // Dark text using space cadet
 
 .administracion-container {
   min-height: 100vh;

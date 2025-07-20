@@ -20,17 +20,45 @@ export interface ProductoApi {
   quantity: number;
   category: string;
   active: boolean;
+  price?: number;
+  lastPriceUpdate?: string;
+  previousPrice?: number;
+  version?: number;
+  priceChangeAmount?: number;
+  priceChangePercentage?: number;
 }
 
 export interface InventoryUpdateRequest {
   quantityChanged: number;
 }
 
+export interface PromotionRequest {
+  productId: string;
+  requestedBy: string;
+  reason: string;
+}
+
+export interface PromotionResponse {
+  id: string;
+  productId: string;
+  productName: string;
+  discountPercentage: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  requestedBy: string;
+  reason: string;
+  createdAt: string;
+}
+
+// Legacy interface for backward compatibility
+export interface Promotion extends PromotionResponse {}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private readonly baseUrl = environment.api.baseUrl + '/inventory';
+  private readonly baseUrl = environment.api.baseUrl;
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
   
@@ -171,11 +199,11 @@ export class ApiService {
         return from(this.createHeaders()).pipe(
           switchMap(headers => {
             if (environment.app.enableLogging) {
-              console.log('[API Service] Request URL:', `${this.baseUrl}/products`);
+              console.log('[API Service] Request URL:', `${this.baseUrl}/inventory/products`);
               console.log('[API Service] Request headers:', headers.keys());
             }
             
-            return this.http.get<ProductoApi[]>(`${this.baseUrl}/products`, { headers })
+            return this.http.get<ProductoApi[]>(`${this.baseUrl}/inventory/products`, { headers })
               .pipe(
                 catchError(error => {
                   if (environment.app.enableLogging) {
@@ -203,7 +231,7 @@ export class ApiService {
     
     return from(this.createHeaders()).pipe(
       switchMap(headers => 
-        this.http.get<ProductoApi>(`${this.baseUrl}/products/${id}`, { headers })
+        this.http.get<ProductoApi>(`${this.baseUrl}/inventory/products/${id}`, { headers })
           .pipe(catchError(this.handleError.bind(this)))
       )
     );
@@ -215,7 +243,7 @@ export class ApiService {
   crearProducto(producto: Partial<ProductoApi>): Observable<ProductoApi> {
     return from(this.createHeaders()).pipe(
       switchMap(headers => 
-        this.http.post<ProductoApi>(`${this.baseUrl}/products`, producto, { headers })
+        this.http.post<ProductoApi>(`${this.baseUrl}/inventory/products`, producto, { headers })
           .pipe(catchError(this.handleError.bind(this)))
       )
     );
@@ -227,7 +255,7 @@ export class ApiService {
   actualizarProducto(id: number, producto: Partial<ProductoApi>): Observable<ProductoApi> {
     return from(this.createHeaders()).pipe(
       switchMap(headers => 
-        this.http.put<ProductoApi>(`${this.baseUrl}/products/${id}`, producto, { headers })
+        this.http.put<ProductoApi>(`${this.baseUrl}/inventory/products/${id}`, producto, { headers })
           .pipe(catchError(this.handleError.bind(this)))
       )
     );
@@ -240,7 +268,7 @@ export class ApiService {
     const request: InventoryUpdateRequest = { quantityChanged };
     return from(this.createHeaders()).pipe(
       switchMap(headers => 
-        this.http.patch<void>(`${this.baseUrl}/products/${id}/stock`, request, { headers })
+        this.http.patch<void>(`${this.baseUrl}/inventory/products/${id}/stock`, request, { headers })
           .pipe(catchError(this.handleError.bind(this)))
       )
     );
@@ -268,7 +296,7 @@ export class ApiService {
         
         return from(this.createHeaders()).pipe(
           switchMap(headers => 
-            this.http.get<ProductoApi[]>(`${this.baseUrl}/low-stock`, { headers })
+            this.http.get<ProductoApi[]>(`${this.baseUrl}/inventory/products/low-stock`, { headers })
               .pipe(catchError(this.handleError.bind(this)))
           )
         );
@@ -340,6 +368,130 @@ export class ApiService {
         );
       })
     );
+  }
+
+  // === MÉTODOS PARA PROMOCIONES ===
+
+  /**
+   * Genera una nueva promoción para un producto específico
+   */
+  generarPromocion(productId: string, requestedBy: string, reason: string): Observable<PromotionResponse> {
+    const promotionRequest: PromotionRequest = {
+      productId,
+      requestedBy,
+      reason
+    };
+
+    return from(this.createHeaders()).pipe(
+      switchMap(headers => {
+        const promotionsUrl = this.baseUrl + '/promotions/generate';
+        if (environment.app.enableLogging) {
+          console.log('[API Service] Generating promotion for product:', productId);
+          console.log('[API Service] Promotions URL:', promotionsUrl);
+        }
+        
+        return this.http.post<PromotionResponse>(promotionsUrl, promotionRequest, { headers })
+          .pipe(catchError(this.handleError.bind(this)));
+      })
+    );
+  }
+
+  /**
+   * Obtiene todas las promociones activas
+   */
+  getPromocionesActivas(): Observable<PromotionResponse[]> {
+    // Return mock data during SSR to prevent build failures
+    if (!this.isBrowser) {
+      return of(this.getMockPromotions());
+    }
+    
+    return this.ensureAuthenticated().pipe(
+      switchMap(isAuth => {
+        if (!isAuth) {
+          if (environment.app.enableLogging) {
+            console.warn('[API Service] Usuario no autenticado, usando datos mock para promociones');
+          }
+          return of(this.getMockPromotions());
+        }
+        
+        return from(this.createHeaders()).pipe(
+          switchMap(headers => {
+            const promotionsUrl = this.baseUrl + '/promotions/active';
+            if (environment.app.enableLogging) {
+              console.log('[API Service] Getting active promotions from:', promotionsUrl);
+            }
+            
+            return this.http.get<PromotionResponse[]>(promotionsUrl, { headers })
+              .pipe(catchError(this.handleError.bind(this)));
+          })
+        );
+      })
+    );
+  }
+
+  /**
+   * Obtiene las promociones para un producto específico
+   */
+  getPromocionesPorProducto(productId: string): Observable<PromotionResponse[]> {
+    // Return mock data during SSR to prevent build failures
+    if (!this.isBrowser) {
+      return of(this.getMockPromotions().filter(p => p.productId === productId));
+    }
+    
+    return from(this.createHeaders()).pipe(
+      switchMap(headers => {
+        const promotionsUrl = this.baseUrl + '/promotions/product/' + productId;
+        return this.http.get<PromotionResponse[]>(promotionsUrl, { headers })
+          .pipe(catchError(this.handleError.bind(this)));
+      })
+    );
+  }
+
+  /**
+   * Verifica el estado del servicio de promociones
+   */
+  getPromotionsHealth(): Observable<string> {
+    return from(this.createHeaders()).pipe(
+      switchMap(headers => {
+        const healthUrl = this.baseUrl + '/promotions/health';
+        return this.http.get<string>(healthUrl, { headers })
+          .pipe(catchError(this.handleError.bind(this)));
+      })
+    );
+  }
+
+  // === MÉTODOS UTILITARIOS ===
+
+  /**
+   * Provides mock promotions data for SSR builds
+   */
+  private getMockPromotions(): PromotionResponse[] {
+    return [
+      {
+        id: 'PROMO001',
+        productId: '1',
+        productName: 'Tensiómetro Digital',
+        discountPercentage: 15,
+        startDate: '2025-07-15T00:00:00Z',
+        endDate: '2025-07-30T23:59:59Z',
+        isActive: true,
+        requestedBy: 'SYSTEM',
+        reason: 'High stock levels',
+        createdAt: '2025-07-15T10:00:00Z'
+      },
+      {
+        id: 'PROMO002',
+        productId: '4',
+        productName: 'Guantes Desechables',
+        discountPercentage: 10,
+        startDate: '2025-07-10T00:00:00Z',
+        endDate: '2025-07-25T23:59:59Z',
+        isActive: true,
+        requestedBy: 'ADMIN',
+        reason: 'Inventory clearance',
+        createdAt: '2025-07-10T14:30:00Z'
+      }
+    ];
   }
 
   // === MÉTODOS UTILITARIOS ===

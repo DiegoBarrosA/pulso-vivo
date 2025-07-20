@@ -35,8 +35,8 @@ export const environment = {
     itemsPerPage: 12, // Productos por página
     enableWishlist: true, // Habilitar lista de deseos
     enableReviews: true, // Habilitar reseñas de productos
-    defaultCurrency: 'EUR', // Moneda por defecto
-    currencySymbol: '€', // Símbolo de la moneda
+    defaultCurrency: 'CLP', // Moneda por defecto
+    currencySymbol: '$', // Símbolo de la moneda
     enableInventoryAlerts: true, // Alertas de inventario
     lowStockThreshold: 10 // Umbral de stock bajo
   },

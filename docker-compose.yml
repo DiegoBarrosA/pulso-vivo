@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # RabbitMQ service
   rabbitmq:
@@ -43,7 +41,7 @@ services:
       - zk-data-1:/var/lib/zookeeper/data
       - zk-log-1:/var/lib/zookeeper/log
     healthcheck:
-      test: ["CMD", "bash", "-c", "echo 'stat' | nc localhost 2181 | grep Mode"]
+      test: ["CMD", "bash", "-c", "echo 'ruok' | nc localhost 2181"]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -71,7 +69,7 @@ services:
       - zk-data-2:/var/lib/zookeeper/data
       - zk-log-2:/var/lib/zookeeper/log
     healthcheck:
-      test: ["CMD", "bash", "-c", "echo 'stat' | nc localhost 2181 | grep Mode"]
+      test: ["CMD", "bash", "-c", "echo 'ruok' | nc localhost 2181"]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -97,7 +95,7 @@ services:
       - zk-data-3:/var/lib/zookeeper/data
       - zk-log-3:/var/lib/zookeeper/log
     healthcheck:
-      test: ["CMD", "bash", "-c", "echo 'stat' | nc localhost 2181 | grep Mode"]
+      test: ["CMD", "bash", "-c", "echo 'ruok' | nc localhost 2181"]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -130,7 +128,7 @@ services:
     volumes:
       - kafka-data-1:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/9092"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -169,7 +167,7 @@ services:
     volumes:
       - kafka-data-2:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9093", "--list"]
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/9093"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -208,7 +206,7 @@ services:
     volumes:
       - kafka-data-3:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9094", "--list"]
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/9094"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -410,6 +408,12 @@ services:
       rabbitmq:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     networks:
       - kafka-net
     volumes:
@@ -469,6 +473,43 @@ services:
       - kafka-net
     volumes:
       - m2-cache:/root/.m2
+
+  # BFF (Backend for Frontend) Service
+  pulso-vivo-bff:
+    build:
+      context: ./pulso-vivo-bff
+      dockerfile: Dockerfile
+    container_name: pulso-vivo-bff
+    ports:
+      - "8099:8099"
+    environment:
+      - SERVER_PORT=8099
+      - SPRING_PROFILES_ACTIVE=docker
+      - AZURE_B2C_ISSUER_URI=https://pulsovivo.b2clogin.com/tfp/82c6cf20-e689-4aa9-bedf-7acaf7c4ead7/b2c_1_pulso_vivo_register_and_login/v2.0/
+      - AZURE_B2C_JWK_SET_URI=https://pulsovivo.b2clogin.com/tfp/82c6cf20-e689-4aa9-bedf-7acaf7c4ead7/b2c_1_pulso_vivo_register_and_login/discovery/v2.0/keys
+      - AZURE_B2C_AUDIENCE=e30e27b2-1240-4f61-a8bd-25aacc63ab36
+      - SERVICES_INVENTORY_URL=http://pulso-vivo-inventory:8081
+      - SERVICES_SALES_URL=http://pulso-vivo-producer:8081
+      - SERVICES_MONITORING_URL=http://pulso-vivo-consumer:8082
+      - SERVICES_STOCK_URL=http://pulso-vivo-kafka-consumidor-ventas-productor-stock:8083
+      - SERVICES_PROMOTIONS_URL=http://pulso-vivo-promotions:8080
+      - LOGGING_LEVEL_CL_DUOC_PULSOVIVO_BFF=DEBUG
+      - LOGGING_LEVEL_ROOT=INFO
+    volumes:
+      - m2-cache:/root/.m2
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8099/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - kafka-net
 
 volumes:
   # Zookeeper volumes

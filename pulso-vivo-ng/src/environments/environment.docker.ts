@@ -25,9 +25,9 @@ export const environment = {
     ],
   },
 
-  // Configuración del API (usando proxy nginx para evitar CORS)
+  // Configuración del API (usando proxy nginx que apunta a AWS API Gateway)
   api: {
-    baseUrl: "/api", // Use nginx proxy for Docker deployment
+    baseUrl: "/api", // nginx will proxy /api/* to AWS API Gateway
     timeout: 30000, // 30 segundos
     retryAttempts: 3,
     bffScopes: [
@@ -52,8 +52,8 @@ export const environment = {
     itemsPerPage: 12,
     enableWishlist: true,
     enableReviews: true,
-    defaultCurrency: "EUR",
-    currencySymbol: "€",
+    defaultCurrency: "CLP",
+    currencySymbol: "$",
     enableInventoryAlerts: true,
     lowStockThreshold: 10,
   },

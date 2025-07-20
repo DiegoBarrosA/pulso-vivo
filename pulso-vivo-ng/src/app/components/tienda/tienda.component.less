@@ -1,15 +1,22 @@
 // === ESTILOS PARA LA TIENDA DE IMPLEMENTOS MÉDICOS ===
 
-// Variables de colores
-@primary-color: #0066cc;
-@secondary-color: #28a745;
-@accent-color: #17a2b8;
-@danger-color: #dc3545;
-@warning-color: #ffc107;
-@light-bg: #f8f9fa;
-@dark-text: #333333;
-@muted-text: #6c757d;
-@border-color: #dee2e6;
+// Variables de colores - NEW PALETTE
+@jordy-blue: #82aaff;
+@space-cadet: #2b2d42;
+@rose-red: #ca2e55;
+@linen: #f7ece1;
+@apricot: #ffd6c0;
+
+// Mapped to semantic names
+@primary-color: @jordy-blue;        // Main brand color
+@secondary-color: @rose-red;        // Secondary/accent color
+@accent-color: @jordy-blue;         // Info/accent elements
+@danger-color: @rose-red;           // Error/danger states
+@warning-color: @apricot;           // Warning states
+@light-bg: @linen;                  // Light background
+@dark-text: @space-cadet;           // Dark text using space cadet
+@muted-text: @space-cadet;          // Muted text using space cadet
+@border-color: darken(@linen, 15%); // Darker linen for borders
 
 .tienda-container {
   min-height: 100vh;
@@ -31,7 +38,7 @@
       
       i {
         margin-right: 0.5rem;
-        color: #ff6b6b;
+        color: @apricot;
         animation: pulse 2s infinite;
       }
     }

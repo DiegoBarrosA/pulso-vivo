@@ -1,0 +1,297 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Pulso Vivo Kafka System API",
+    "description" : "Complete API for the Pulso Vivo Kafka microservices system with Azure AD B2C authentication",
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "https://puicky4br7.execute-api.us-east-1.amazonaws.com/{basePath}",
+    "variables" : {
+      "basePath" : {
+        "default" : "prod"
+      }
+    }
+  } ],
+  "tags" : [ {
+    "name" : "Promotions Service"
+  }, {
+    "name" : "Inventory Service"
+  }, {
+    "name" : "Sales Monitoring Service"
+  }, {
+    "name" : "Sales Producer Service"
+  }, {
+    "name" : "Consumer-Producer Service"
+  }, {
+    "name" : "RabbitMQ Integration"
+  }, {
+    "name" : "Health Checks"
+  }, {
+    "name" : "Price Monitoring Service"
+  } ],
+  "paths" : {
+    "/api/inventory/products/{id}" : {
+      "get" : {
+        "operationId" : "getProductById",
+        "responses" : {
+          "default" : {
+            "description" : "Default response for GET /api/inventory/products/{id}"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8083/api/inventory/products/{id}",
+          "connectionType" : "INTERNET"
+        }
+      },
+      "put" : {
+        "operationId" : "updateProduct",
+        "responses" : {
+          "default" : {
+            "description" : "Default response for PUT /api/inventory/products/{id}"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8083/api/inventory/products/{id}",
+          "connectionType" : "INTERNET"
+        }
+      },
+      "delete" : {
+        "operationId" : "deleteProduct",
+        "responses" : {
+          "default" : {
+            "description" : "Default response for DELETE /api/inventory/products/{id}"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8083/api/inventory/products/{id}",
+          "connectionType" : "INTERNET"
+        }
+      },
+      "parameters" : [ {
+        "name" : "id",
+        "in" : "path",
+        "description" : "Generated path parameter for id",
+        "required" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      } ]
+    },
+    "/api/inventory/products" : {
+      "get" : {
+        "operationId" : "getAllProducts",
+        "responses" : {
+          "default" : {
+            "description" : "Default response for GET /api/inventory/products"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8083/api/inventory/products",
+          "connectionType" : "INTERNET",
+          "timeoutInMillis" : 30000
+        }
+      },
+      "post" : {
+        "operationId" : "createProduct",
+        "responses" : {
+          "default" : {
+            "description" : "Default response for POST /api/inventory/products"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8083/api/inventory/products",
+          "connectionType" : "INTERNET",
+          "timeoutInMillis" : 30000
+        }
+      }
+    },
+    "/api/inventory/products/low-stock" : {
+      "get" : {
+        "operationId" : "getLowStockProducts",
+        "responses" : {
+          "default" : {
+            "description" : "Default response for GET /api/inventory/products/low-stock"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8083/api/inventory/products/low-stock",
+          "connectionType" : "INTERNET"
+        }
+      }
+    },
+    "/api/inventory/update" : {
+      "post" : {
+        "operationId" : "updateProductInventory",
+        "responses" : {
+          "default" : {
+            "description" : "Default response for POST /api/inventory/update"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8083/api/inventory/update",
+          "connectionType" : "INTERNET"
+        }
+      }
+    },
+    "/api/promotions/generate" : {
+      "post" : {
+        "operationId" : "generatePromotion",
+        "tags" : [ "Promotions Service" ],
+        "responses" : {
+          "default" : {
+            "description" : "Default response for POST /api/promotions/generate"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8080/api/promotions/generate",
+          "connectionType" : "INTERNET"
+        }
+      }
+    },
+    "/api/promotions/active" : {
+      "get" : {
+        "operationId" : "getActivePromotions",
+        "tags" : [ "Promotions Service" ],
+        "responses" : {
+          "default" : {
+            "description" : "Default response for GET /api/promotions/active"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8080/api/promotions/active",
+          "connectionType" : "INTERNET"
+        }
+      }
+    },
+    "/api/promotions/product/{productId}" : {
+      "get" : {
+        "operationId" : "getPromotionsByProduct",
+        "tags" : [ "Promotions Service" ],
+        "responses" : {
+          "default" : {
+            "description" : "Default response for GET /api/promotions/product/{productId}"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8080/api/promotions/product/{productId}",
+          "connectionType" : "INTERNET"
+        }
+      },
+      "parameters" : [ {
+        "name" : "productId",
+        "in" : "path",
+        "description" : "Generated path parameter for productId",
+        "required" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      } ]
+    },
+    "/api/promotions/health" : {
+      "get" : {
+        "operationId" : "getPromotionsHealth",
+        "tags" : [ "Promotions Service" ],
+        "responses" : {
+          "default" : {
+            "description" : "Default response for GET /api/promotions/health"
+          }
+        },
+        "security" : [ {
+          "azureAD" : [ ]
+        } ],
+        "x-amazon-apigateway-integration" : {
+          "payloadFormatVersion" : "1.0",
+          "type" : "http_proxy",
+          "httpMethod" : "ANY",
+          "uri" : "http://54.156.188.31:8080/api/promotions/health",
+          "connectionType" : "INTERNET"
+        }
+      }
+    }
+  },
+  "components" : {
+    "securitySchemes" : {
+      "azureAD" : {
+        "type" : "oauth2",
+        "flows" : { },
+        "x-amazon-apigateway-authorizer" : {
+          "identitySource" : "$request.header.Authorization",
+          "jwtConfiguration" : {
+            "audience" : [ "e30e27b2-1240-4f61-a8bd-25aacc63ab36" ],
+            "issuer" : "https://pulsovivo.b2clogin.com/tfp/82c6cf20-e689-4aa9-bedf-7acaf7c4ead7/b2c_1_pulso_vivo_register_and_login/v2.0/"
+          },
+          "type" : "jwt"
+        }
+      }
+    }
+  },
+  "x-amazon-apigateway-cors" : {
+    "allowMethods" : [ "DELETE", "GET", "OPTIONS", "POST", "PUT" ],
+    "allowHeaders" : [ "authorization", "content-type", "x-amz-date", "x-api-key" ],
+    "maxAge" : 300,
+    "allowCredentials" : false,
+    "allowOrigins" : [ "*" ]
+  },
+  "x-amazon-apigateway-importexport-version" : "1.0"
+}

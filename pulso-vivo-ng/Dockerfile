@@ -13,10 +13,10 @@ COPY . .
 
 # Accept build arguments for environment configuration
 ARG INVENTORY_SERVICE_URL=http://localhost:8081/api
-ARG API_GATEWAY_URL=https://erwqz80g2d.execute-api.us-east-1.amazonaws.com/api
+ARG API_GATEWAY_URL=https://puicky4br7.execute-api.us-east-1.amazonaws.com/prod
 ARG AZURE_AD_CLIENT_ID=7549ac9c-9294-4bb3-98d6-752d12b13d81
 ARG AZURE_AD_AUTHORITY=https://PulsoVivo.b2clogin.com/PulsoVivo.onmicrosoft.com/B2C_1_pulso_vivo_register_and_login
-ARG AZURE_AD_REDIRECT_URI=http://localhost:4200
+ARG AZURE_AD_REDIRECT_URI=http://localhost:4000
 ARG ENABLE_LOGGING=false
 
 # Set environment variables for build
@@ -39,28 +39,38 @@ COPY --from=build /app/dist/docker/browser /usr/share/nginx/html
 # Copy nginx configuration template for Angular SPA
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
-# Create script to replace environment variables at runtime
+# Create directories and set permissions before creating scripts
+RUN mkdir -p /usr/share/nginx/html/assets && \
+    mkdir -p /docker-entrypoint.d && \
+    chmod 755 /usr/share/nginx/html/assets && \
+    chmod 755 /docker-entrypoint.d
+
+# Create runtime environment substitution script
 RUN echo '#!/bin/sh' > /docker-entrypoint.d/30-envsubst.sh && \
-    echo 'envsubst < /usr/share/nginx/html/assets/env.template.js > /usr/share/nginx/html/assets/env.js' >> /docker-entrypoint.d/30-envsubst.sh && \
+    echo 'mkdir -p /usr/share/nginx/html/assets' >> /docker-entrypoint.d/30-envsubst.sh && \
+    echo 'if [ -f /usr/share/nginx/html/assets/env.template.js ]; then' >> /docker-entrypoint.d/30-envsubst.sh && \
+    echo '  envsubst < /usr/share/nginx/html/assets/env.template.js > /usr/share/nginx/html/assets/env.js' >> /docker-entrypoint.d/30-envsubst.sh && \
+    echo 'fi' >> /docker-entrypoint.d/30-envsubst.sh && \
     chmod +x /docker-entrypoint.d/30-envsubst.sh
 
-# Create environment template file
-RUN mkdir -p /usr/share/nginx/html/assets && \
-    echo 'window.env = {' > /usr/share/nginx/html/assets/env.template.js && \
+# Create environment template file with proper permissions
+RUN echo 'window.env = {' > /usr/share/nginx/html/assets/env.template.js && \
     echo '  INVENTORY_SERVICE_URL: "${INVENTORY_SERVICE_URL}",' >> /usr/share/nginx/html/assets/env.template.js && \
     echo '  API_GATEWAY_URL: "${API_GATEWAY_URL}",' >> /usr/share/nginx/html/assets/env.template.js && \
     echo '  AZURE_AD_CLIENT_ID: "${AZURE_AD_CLIENT_ID}",' >> /usr/share/nginx/html/assets/env.template.js && \
     echo '  AZURE_AD_AUTHORITY: "${AZURE_AD_AUTHORITY}",' >> /usr/share/nginx/html/assets/env.template.js && \
     echo '  AZURE_AD_REDIRECT_URI: "${AZURE_AD_REDIRECT_URI}",' >> /usr/share/nginx/html/assets/env.template.js && \
     echo '  ENABLE_LOGGING: "${ENABLE_LOGGING}"' >> /usr/share/nginx/html/assets/env.template.js && \
-    echo '};' >> /usr/share/nginx/html/assets/env.template.js
+    echo '};' >> /usr/share/nginx/html/assets/env.template.js && \
+    chmod 644 /usr/share/nginx/html/assets/env.template.js
 
 # Set default environment variables
 ENV INVENTORY_SERVICE_URL=http://localhost:8081/api
-ENV API_GATEWAY_URL=https://erwqz80g2d.execute-api.us-east-1.amazonaws.com/api
+ENV API_GATEWAY_URL=https://puicky4br7.execute-api.us-east-1.amazonaws.com/prod
 ENV AZURE_AD_CLIENT_ID=7549ac9c-9294-4bb3-98d6-752d12b13d81
 ENV AZURE_AD_AUTHORITY=https://PulsoVivo.b2clogin.com/PulsoVivo.onmicrosoft.com/B2C_1_pulso_vivo_register_and_login
-ENV AZURE_AD_REDIRECT_URI=http://localhost:4200
+ENV AZURE_AD_REDIRECT_URI=http://localhost:4000
+
 ENV ENABLE_LOGGING=false
 
 # Expose port 80

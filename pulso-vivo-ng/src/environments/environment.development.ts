@@ -3,7 +3,7 @@ export const environment = {
 
   // Configuración de Azure AD B2C para desarrollo
   azureAd: {
-    clientId: "7549ac9c-9294-4bb3-98d6-752d12b13d81", // Tu Client ID de B2C
+    clientId: "e30e27b2-1240-4f61-a8bd-25aacc63ab36", // Tu Client ID de B2C
     authority:
       "https://PulsoVivo.b2clogin.com/PulsoVivo.onmicrosoft.com/B2C_1_pulso_vivo_register_and_login", // B2C tenant y policy correctos
     redirectUri: "http://localhost:4000", // Updated to use port 4000
@@ -25,15 +25,15 @@ export const environment = {
     ],
   },
 
-  // Configuración del API (usando proxy local para evitar CORS)
+  // Configuración del API (usando AWS API Gateway)
   api: {
-    baseUrl: "/api", // Use proxy for development to avoid CORS issues
+    baseUrl: "https://puicky4br7.execute-api.us-east-1.amazonaws.com/prod", // AWS API Gateway
     timeout: 30000, // 30 segundos
     retryAttempts: 3,
     bffScopes: [
-      "https://PulsoVivo.onmicrosoft.com/pulso-vivo-api/access",
       "openid",
-      "profile",
+      "profile", 
+      "offline_access"
     ], // B2C API scopes
   },
 

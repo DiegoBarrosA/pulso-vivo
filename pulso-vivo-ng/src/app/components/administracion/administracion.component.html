@@ -48,6 +48,14 @@
         <li class="nav-item">
           <button 
             class="nav-link" 
+            [class.active]="vistaActual === 'promociones'"
+            (click)="cambiarVista('promociones')">
+            <i class="bi bi-percent"></i> Promociones
+          </button>
+        </li>
+        <li class="nav-item">
+          <button 
+            class="nav-link" 
             [class.active]="vistaActual === 'reportes'"
             (click)="cambiarVista('reportes')">
             <i class="bi bi-graph-up"></i> Reportes
@@ -111,10 +119,10 @@
             <div class="card-body">
               <div class="d-flex align-items-center">
                 <div class="stat-icon">
-                  <i class="bi bi-currency-euro"></i>
+                  <i class="bi bi-currency-dollar"></i>
                 </div>
                 <div class="stat-content">
-                  <h3>{{ estadisticas.valorInventario | currency:'EUR':'symbol':'1.0-0':'es' }}</h3>
+                  <h3>{{ estadisticas.valorInventario | currency:'CLP':'symbol':'1.0-0':'es-CL' }}</h3>
                   <p>Valor Inventario</p>
                 </div>
               </div>
@@ -226,7 +234,7 @@
                     </span>
                   </td>
                   <td>{{ producto.stockMinimo || 5 }}</td>
-                  <td>{{ (producto.precio || 0) | currency:'EUR':'symbol':'1.2-2':'es' }}</td>
+                  <td>{{ (producto.precio || 0) | currency:'CLP':'symbol':'1.0-0':'es-CL' }}</td>
                   <td>{{ producto.proveedor || 'N/A' }}</td>
                   <td>
                     <span class="badge" [class.bg-success]="producto.active || producto.activo" [class.bg-danger]="!(producto.active || producto.activo)">
@@ -247,6 +255,16 @@
                         (click)="abrirModalMovimiento(producto)"
                         title="Movimiento de stock">
                         <i class="bi bi-arrow-left-right"></i>
+                      </button>
+                      <button 
+                        class="btn btn-outline-success" 
+                        (click)="abrirModalPromocion(producto)"
+                        title="Generar Promoción"
+                        [class.btn-success]="tienePromocionActiva(producto.id)">
+                        <i class="bi bi-percent"></i>
+                        <span *ngIf="tienePromocionActiva(producto.id)" class="ms-1 badge bg-light text-dark">
+                          {{ getPromocionActiva(producto.id)?.discountPercentage }}%
+                        </span>
                       </button>
                       <button 
                         class="btn btn-outline-warning" 
@@ -316,6 +334,68 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Vista Promociones -->
+      <div *ngIf="vistaActual === 'promociones'" class="promociones-section">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3>Promociones Activas</h3>
+          <button class="btn btn-outline-primary" (click)="cargarPromocionesActivas()">
+            <i class="bi bi-arrow-clockwise"></i>
+            Actualizar
+          </button>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Descuento</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin</th>
+                <th>Estado</th>
+                <th>Solicitado por</th>
+                <th>Razón</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let promocion of promocionesActivas">
+                <td>{{ promocion.id }}</td>
+                <td>
+                  <div class="producto-info">
+                    <strong>{{ promocion.productName }}</strong>
+                    <small class="d-block text-muted">ID: {{ promocion.productId }}</small>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-success fs-6">
+                    {{ promocion.discountPercentage }}% OFF
+                  </span>
+                </td>
+                <td>{{ promocion.startDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ promocion.endDate | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <span class="badge" 
+                        [class.bg-success]="promocion.isActive" 
+                        [class.bg-secondary]="!promocion.isActive">
+                    {{ promocion.isActive ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td>{{ promocion.requestedBy }}</td>
+                <td>{{ promocion.reason }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Mensaje cuando no hay promociones -->
+        <div *ngIf="promocionesActivas.length === 0" class="text-center py-4">
+          <i class="bi bi-percent display-4 text-muted"></i>
+          <h4 class="mt-3">No hay promociones activas</h4>
+          <p class="text-muted">Use el botón "Generar Promoción" en la tabla de inventario para crear nuevas promociones</p>
         </div>
       </div>
 
@@ -456,5 +536,79 @@
   </div>
 </div>
 
+<!-- Modal para Generar Promoción -->
+<div class="modal fade" [class.show]="mostrarModalPromocion" 
+     [style.display]="mostrarModalPromocion ? 'block' : 'none'"
+     *ngIf="mostrarModalPromocion">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-percent"></i>
+          Generar Promoción - {{ productoSeleccionado?.name || productoSeleccionado?.nombre }}
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModalPromocion()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i>
+          Se generará una promoción automática para este producto basada en análisis de stock y ventas.
+        </div>
+        
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Producto</label>
+            <div class="form-control-plaintext bg-light p-2 rounded">
+              <strong>{{ productoSeleccionado?.name || productoSeleccionado?.nombre }}</strong>
+              <br>
+              <small class="text-muted">{{ productoSeleccionado?.description || productoSeleccionado?.descripcion }}</small>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Stock Actual</label>
+            <div class="form-control-plaintext bg-light p-2 rounded">
+              <span [class]="getClaseEstado(getEstadoStock(productoSeleccionado!))">
+                {{ productoSeleccionado?.quantity || productoSeleccionado?.cantidadStock }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Solicitado por *</label>
+            <select class="form-control" [(ngModel)]="formularioPromocion.requestedBy" name="requestedBy" required>
+              <option value="ADMIN">Administrador</option>
+              <option value="SYSTEM">Sistema Automático</option>
+              <option value="MARKETING">Marketing</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Razón para la promoción *</label>
+            <textarea class="form-control" rows="3" 
+                      [(ngModel)]="formularioPromocion.reason" 
+                      name="reason" required 
+                      placeholder="Ej: Exceso de stock, impulsar ventas, liquidación..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalPromocion()">
+          Cancelar
+        </button>
+        <button type="button" 
+                class="btn btn-success" 
+                (click)="generarPromocion()"
+                [disabled]="!formularioPromocion.reason || generandoPromocion">
+          <span *ngIf="generandoPromocion" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!generandoPromocion" class="bi bi-percent"></i>
+          {{ generandoPromocion ? 'Generando...' : 'Generar Promoción' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Backdrop -->
-<div class="modal-backdrop fade show" *ngIf="mostrarModal" (click)="cerrarModal()"></div>
+<div class="modal-backdrop fade show" *ngIf="mostrarModal || mostrarModalPromocion" 
+     (click)="mostrarModal ? cerrarModal() : cerrarModalPromocion()"></div>

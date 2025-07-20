@@ -3,7 +3,7 @@ export const environment = {
 
   // Configuración de Azure AD B2C
   azureAd: {
-    clientId: "7549ac9c-9294-4bb3-98d6-752d12b13d81", // Tu Client ID de B2C
+    clientId: "e30e27b2-1240-4f61-a8bd-25aacc63ab36", // Tu Client ID de B2C
     authority:
       "https://PulsoVivo.b2clogin.com/PulsoVivo.onmicrosoft.com/B2C_1_pulso_vivo_register_and_login", // B2C tenant y policy correctos
     redirectUri: "https://your-production-domain.com",
@@ -25,9 +25,9 @@ export const environment = {
     ],
   },
 
-  // Configuración del API (Inventory Service)
+  // Configuración del API (AWS API Gateway)
   api: {
-    baseUrl: process.env['INVENTORY_SERVICE_URL'] || "https://your-production-inventory-service.com/api", // URL del pulso-vivo-inventory-service
+    baseUrl: "https://puicky4br7.execute-api.us-east-1.amazonaws.com/prod", // AWS API Gateway
     timeout: 30000, // 30 segundos
     retryAttempts: 3,
     bffScopes: ["https://PulsoVivo.onmicrosoft.com/pulso-vivo-api/access", "openid", "profile"], // B2C API scopes
@@ -48,7 +48,7 @@ export const environment = {
     itemsPerPage: 12,
     enableWishlist: true,
     enableReviews: true,
-    defaultCurrency: "EUR",
+    defaultCurrency: "CLP",
     currencySymbol: "€",
     enableInventoryAlerts: true,
     lowStockThreshold: 10,

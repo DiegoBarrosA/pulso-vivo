@@ -145,7 +145,7 @@
               
               <div class="producto-info mt-auto">
                 <div class="precio-info mb-3">
-                  <span class="precio">{{ (producto.precio || 0) | currency:'EUR':'symbol':'1.2-2':'es' }}</span>
+                  <span class="precio">{{ (producto.precio || 0) | currency:'CLP':'symbol':'1.0-0':'es-CL' }}</span>
                   <small class="text-muted ms-2" *ngIf="producto.enStock || (producto.quantity || producto.cantidadDisponible || 0) > 0">
                     ({{ producto.quantity || producto.cantidadDisponible }} disponibles)
                   </small>
@@ -200,7 +200,7 @@
           <ul class="list-unstyled">
             <li><i class="bi bi-telephone"></i> +34 900 123 456</li>
             <li><i class="bi bi-envelope"></i> info&#64;pulsovivo.com</li>
-            <li><i class="bi bi-geo-alt"></i> Madrid, España</li>
+            <li><i class="bi bi-geo-alt"></i> Santiago, Chile</li>
           </ul>
         </div>
       </div>

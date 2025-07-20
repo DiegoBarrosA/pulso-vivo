@@ -4,7 +4,7 @@ export const environment = {
   // Configuración de Azure AD B2C
   azureAd: {
     // B2C Application (client) ID from Azure Portal
-    clientId: "7549ac9c-9294-4bb3-98d6-752d12b13d81", // Replace with your B2C app client ID
+    clientId: "e30e27b2-1240-4f61-a8bd-25aacc63ab36", // Replace with your B2C app client ID
     
     // B2C Authority URL format: https://{tenant-name}.b2clogin.com/{tenant-name}.onmicrosoft.com/{policy-name}
     authority: "https://your-tenant-name.b2clogin.com/your-tenant-name.onmicrosoft.com/B2C_1_signupsignin",
@@ -82,8 +82,8 @@ export const environment = {
     itemsPerPage: 12,
     enableWishlist: true,
     enableReviews: true,
-    defaultCurrency: "EUR",
-    currencySymbol: "€",
+    defaultCurrency: "CLP",
+    currencySymbol: "$",
     enableInventoryAlerts: true,
     lowStockThreshold: 10,
   },
